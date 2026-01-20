@@ -1,0 +1,14 @@
+# Environment files with secrets
+.env.local
+.env*.local
+*.key
+*.pem
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Backups
+*.bak
+*.backup
