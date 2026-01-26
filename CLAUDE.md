@@ -41,7 +41,11 @@ Project phase: [Setup / Active Development / Maintenance / etc.]
 
 1. Use branches for all development. Never commit to main.
 2. When developing solo, merge branches directly; when contributing to a repo use PRs.
-3. Use "feature/" and "fix/" prefixes.
+3. **Branch naming:** Unless project specifies otherwise, use:
+   - `<user>/feature-<feature-label>` for features
+   - `<user>/fix-<fix-label>` for bug fixes
+
+   Where `<user>` is the user's github username. Projects may specify different formats in their CLAUDE.md.
 
 ### Commits
 

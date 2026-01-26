@@ -1,24 +1,20 @@
 ---
 name: gen-module
-description: Generate a new Viam module with project-specific defaults
-arguments:
-  - name: subtype
-    description: Resource subtype (generic-service, generic-component, etc.)
-    required: true
-  - name: model_name
-    description: Model name (e.g., controller, sensor)
-    required: true
+description: Generate a new Viam module with the specified configuration. Use to initialize a repository with viam module boilerplate.
+argument-hint: <module-name> <namespace> <subtype> <model-name>
 ---
 
-Run the Viam module generator with this project's standard settings:
+Generate a new Viam module with these parameters: $ARGUMENTS
+
+For example: `mycorp-sensor myorg rdk:component:sensor mycorp-sensor`
 
 ```bash
 viam module generate \
   --language go \
-  --name kettle-cycle-test \
-  --public-namespace viamdemo \
-  --model-name $ARGUMENTS.model_name \
-  --resource-subtype $ARGUMENTS.subtype \
+  --name MODULE_NAME \
+  --public-namespace NAMESPACE \
+  --model-name MODEL_NAME \
+  --resource-subtype SUBTYPE \
   --visibility private
 ```
 

@@ -1,16 +1,15 @@
 ---
 name: reload
-description: Hot-reload the module to the connected machine
+description: Hot-reload a viam module for a machine by its main partID
+argument-hint: <part-id>
 ---
 
-Rebuild and hot-reload the module:
+Rebuild and hot-reload the module to part ID: $ARGUMENTS
 
 ```bash
-make reload-module
-```
+# Clean old build artifacts
+rm -f module.tar.gz bin/*
 
-This:
-1. Removes existing build artifacts
-2. Rebuilds the binary for the target platform (linux/arm64 for Raspberry Pi)
-3. Packages it into module.tar.gz
-4. Uploads and restarts the module on the machine via `viam module reload-local`
+# Use viam module reload-local (triggers build via meta.json)
+viam module reload-local --part-id $ARGUMENTS
+```

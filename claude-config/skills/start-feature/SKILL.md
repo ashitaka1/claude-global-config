@@ -30,9 +30,17 @@ This creates `feature/user-authentication` and enters the feature-dev workflow.
 
 When invoked with `$ARGUMENTS`:
 
-1. Create and switch to the branch:
+1. Create and switch to the branch following the project's branch naming conventions:
+
+   **Check project CLAUDE.md first** for branch naming conventions. If there are none, use this default format:
+   - `<user>/feature-<label>` for features
+   - `<user>/fix-<label>` for bug fixes
+
+   Where `<user>` is the user's github username.
+
+   Example command (using default format):
    ```bash
-   git checkout -b feature/$ARGUMENTS
+   git checkout -b <user>/feature-$ARGUMENTS
    ```
 
 2. Immediately invoke the feature-dev skill:
@@ -44,6 +52,5 @@ This ensures a seamless workflow: branch creation → guided development without
 
 ## Notes
 
-- Follows project branching conventions (feature/ prefix)
-- For bug fixes, use `feature/fix-<description>` or manually create `fix/<description>` branches
+- Always check project CLAUDE.md for specific branch naming conventions first
 - The feature-dev workflow will handle planning, architecture, implementation, and testing

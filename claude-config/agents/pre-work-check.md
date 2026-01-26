@@ -26,11 +26,20 @@ Run these checks:
    - Otherwise: PASS
 
 3. **Tests baseline**
-   ```bash
-   make test
-   ```
+
+   If the project has tests, run them.
+
+   Determine how to run tests based on project conventions and available tooling:
+   - Check if there's a project skill like /test
+   - Look for common test commands (make test, go test, npm test, pytest, etc.)
+   - Examine the project structure to understand the testing setup
+
+   If tests exist:
    - If tests fail: BLOCK (fix before starting new work)
    - If tests pass: PASS
+
+   If no tests found:
+   - WARN (recommend adding tests)
 
 ## Output Format
 

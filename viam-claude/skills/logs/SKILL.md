@@ -1,21 +1,17 @@
 ---
 name: logs
-description: View recent machine logs from Viam
-arguments:
-  - name: keyword
-    description: Filter logs by keyword (optional)
-    required: false
+description: View recent machine logs from Viam. Use when you need to check for the effect of a new change, debug a problem, or validate something is working on a viam host.
+argument-hint: <machine-id> [keyword]
 ---
 
-View recent machine logs:
+View recent machine logs for the machine-id and optional keywoard found in $ARGUMENTS
+
+For example: `abc-123` or `abc-123 error`
 
 ```bash
-MACHINE_ID=$(jq -r '.machine_id' machine.json)
-{{#if keyword}}
-viam machine logs --machine $MACHINE_ID --count 50 --keyword {{keyword}}
-{{else}}
-viam machine logs --machine $MACHINE_ID --count 50
-{{/if}}
-```
+# If no keyword provided:
+viam machine logs --machine MACHINE_ID --count 50
 
-Shows the 50 most recent log entries from the connected machine.
+# If keyword provided:
+viam machine logs --machine MACHINE_ID --count 50 --keyword KEYWORD
+```
