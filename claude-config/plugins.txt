@@ -1,0 +1,12 @@
+# Claude Code Plugins
+# One plugin per line, format: plugin-name@marketplace
+# Lines starting with # are ignored
+
+commit-commands@claude-plugins-official
+swift-lsp@claude-plugins-official
+github@claude-plugins-official
+feature-dev@claude-plugins-official
+code-simplifier@claude-plugins-official
+explanatory-output-style@claude-plugins-official
+learning-output-style@claude-plugins-official
+gopls-lsp@claude-plugins-official

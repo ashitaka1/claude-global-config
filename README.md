@@ -9,7 +9,7 @@ Global configuration and reusable components for Claude Code development workflo
 - **CLAUDE.md** - Global development standards, workflow, and testing philosophy
 - **~/.claude/settings.json** - Pre-approved permissions for safe commands
 
-### Agents (`.claude/agents/`)
+### Agents (`claude-config/agents/`)
 
 Workflow automation agents:
 
@@ -22,7 +22,7 @@ Workflow automation agents:
 - `completion-checker` - Pre-merge quality gate
 - `retro-reviewer` - Workflow optimization
 
-### Skills (`.claude/skills/`)
+### Skills (`claude-config/skills/`)
 
 - `/start-feature <name>` - Create branch and launch guided development
 
@@ -37,13 +37,81 @@ Workflow automation agents:
 
 ## Installation
 
-The global `CLAUDE.md` in this repo should be copied to `~/.claude/CLAUDE.md` to apply across all projects.
+### Automated Sync (Recommended)
 
-Agents and skills are already in `.claude/` directories and will be discovered by Claude Code.
+Use the built-in sync system to manage configuration:
+
+```bash
+# Clone this repository
+git clone <repo-url> ~/Developer/Claude-defaults
+cd ~/Developer/Claude-defaults
+
+# Set up API key (if using api_key_helper)
+echo 'export ANTHROPIC_API_KEY="your-key"' >> ~/.zshrc
+source ~/.zshrc
+
+# Deploy to live config (installs plugins automatically)
+./sync.sh deploy
+```
+
+### Manual Installation
+
+Alternatively, manually copy files:
+- `CLAUDE.md` → `~/.claude/CLAUDE.md`
+- `claude-config/agents/*` → `~/.claude/agents/*`
+- `claude-config/skills/*` → `~/.claude/skills/*`
+- `claude-config/settings.sync.json` → `~/.claude/settings.json`
+
+## Configuration Sync
+
+### Making Configuration Changes
+
+1. **Experiment in Live Config**
+   ```bash
+   # Edit files in ~/.claude/ directly
+   vim ~/.claude/CLAUDE.md
+   # OR add a new agent
+   vim ~/.claude/agents/my-new-agent.md
+   ```
+
+2. **Check Status**
+   ```bash
+   cd ~/Developer/Claude-defaults
+   ./sync.sh status
+   ```
+
+3. **Preview Changes**
+   ```bash
+   ./sync.sh pull --dry-run
+   ./sync.sh diff CLAUDE.md
+   ```
+
+4. **Pull Changes into Repo**
+   ```bash
+   ./sync.sh pull
+   ```
+
+5. **Review and Commit**
+   ```bash
+   git diff
+   git add -A
+   git commit -m "Update configuration from live experiments"
+   git push
+   ```
+
+6. **Deploy on Other Machines**
+   ```bash
+   # On another machine
+   cd ~/Developer/Claude-defaults
+   git pull
+   ./sync.sh deploy
+   ```
+
+See [README-SYNC.md](README-SYNC.md) for detailed sync documentation.
 
 ## Usage
 
-1. Copy `CLAUDE.md` to your home directory's `.claude/` folder if you want truly global defaults
+1. Copy `CLAUDE.md` to your home directory's `claude-config/` folder if you want truly global defaults
 2. Or keep project-specific by copying sections to individual project CLAUDE.md files
 3. Install viam-claude plugin for Viam projects: `/plugin install <path-to-this-repo>/viam-claude`
 4. Use agents during development: `pre-work-check`, `test-scrutinizer`, `completion-checker`, etc.

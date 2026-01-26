@@ -1,0 +1,46 @@
+# Sync Configuration
+# Defines what files and directories to sync between repo and live config
+
+sync:
+  files:
+    - source: CLAUDE.md
+      target: ~/.claude/CLAUDE.md
+
+    - source: claude-config/settings.sync.json
+      target: ~/.claude/settings.json
+
+    - source: claude-config/api_key_helper.sh
+      target: ~/.claude/api_key_helper.sh
+      sanitize: true  # Special handling for secrets
+
+  directories:
+    - source: claude-config/agents
+      target: ~/.claude/agents
+      recursive: true
+
+    - source: claude-config/skills
+      target: ~/.claude/skills
+      recursive: true
+
+ignore:
+  live:
+    - cache/**
+    - history.jsonl
+    - plans/**
+    - session-env/**
+    - plugins/**
+    - debug/**
+    - file-history/**
+    - todos/**
+    - statsig/**
+    - telemetry/**
+    - shell-snapshots/**
+    - paste-cache/**
+    - projects/**
+    - backups/**  # Never sync backup files
+
+backups:
+  enabled: true
+  location: ~/.claude/backups/sync
+  keep_count: 10
+  format: tar.gz  # Always use compressed format

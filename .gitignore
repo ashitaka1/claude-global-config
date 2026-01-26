@@ -12,3 +12,10 @@
 # Backups
 *.bak
 *.backup
+
+# Sync system
+.sync-state.json
+claude-config/api_key_helper.sh
+
+# Plugins (installed via install-plugins.sh)
+claude-config/plugins/
