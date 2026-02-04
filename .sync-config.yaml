@@ -11,7 +11,9 @@ sync:
 
     - source: claude-config/api_key_helper.sh
       target: ~/.claude/api_key_helper.sh
-      sanitize: true  # Special handling for secrets
+
+    - source: claude-config/statusline.sh
+      target: ~/.claude/statusline.sh
 
   directories:
     - source: claude-config/agents

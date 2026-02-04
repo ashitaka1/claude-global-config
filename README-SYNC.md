@@ -70,7 +70,7 @@ Show detailed diffs between repo and live config:
 ### Files (bidirectional)
 - `CLAUDE.md` ↔ `~/.claude/CLAUDE.md`
 - `claude-config/settings.sync.json` ↔ `~/.claude/settings.json`
-- `claude-config/api_key_helper.sh` ↔ `~/.claude/api_key_helper.sh` (with sanitization)
+- `claude-config/api_key_helper.sh` ↔ `~/.claude/api_key_helper.sh`
 - `claude-config/plugins.txt` ↔ installed plugins (auto-install on deploy, auto-update on pull)
 
 ### Directories (bidirectional)
@@ -212,15 +212,11 @@ Continue? (yes/no):
 
 ## API Key Management
 
-The sync system handles API keys securely:
+The sync system handles API keys:
 
-### On Pull (live → repo):
-- Hardcoded API key values are replaced with `$ANTHROPIC_API_KEY` placeholder
-- Sanitized version stored in repo (safe to commit)
-
-### On Deploy (repo → live):
-- Placeholder interpolated with actual key from `$ANTHROPIC_API_KEY` environment variable
-- Working script deployed to `~/.claude/api_key_helper.sh`
+- `api_key_helper.sh` syncs bidirectionally like other files
+- Store API keys using secure methods (e.g., 1Password CLI, environment variables)
+- Avoid hardcoding keys directly in scripts when possible
 
 ### Setup:
 
@@ -273,8 +269,7 @@ Pull live config → repository (overwrite).
 1. Confirms operation (requires "yes")
 2. Backs up existing repo files
 3. Copies live config to repo
-4. Sanitizes API key in `api_key_helper.sh`
-5. Updates sync state
+4. Updates sync state
 
 **Note:** After pull, review changes with `git diff` before committing.
 

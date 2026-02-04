@@ -1,5 +1,5 @@
 {
-  "apiKeyHelper": "/Users/apr/.claude/api_key_helper.sh",
+  "apiKeyHelper": "~/.claude/api_key_helper.sh",
   "permissions": {
     "allow": [
       "WebSearch",
@@ -116,7 +116,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "/Users/apr/.claude/statusline.sh",
+    "command": "~/.claude/statusline.sh",
     "padding": 0
   },
   "enabledPlugins": {
