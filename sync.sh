@@ -8,15 +8,27 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Source core functions
+# Source core functions (with existence check)
+SYNC_CORE="$SCRIPT_DIR/lib/sync-core.sh"
+if [ ! -f "$SYNC_CORE" ]; then
+    echo "Error: Core library not found: $SYNC_CORE" >&2
+    echo "Please ensure the repository is complete." >&2
+    exit 1
+fi
 # shellcheck source=lib/sync-core.sh
-source "$SCRIPT_DIR/lib/sync-core.sh"
+source "$SYNC_CORE"
+
+# Check required dependencies
+check_dependencies
 
 # Configuration
 readonly REPO_DIR="$SCRIPT_DIR"
 readonly LIVE_DIR="$HOME/.claude"
 readonly STATE_FILE="$REPO_DIR/.sync-state.json"
 readonly BACKUP_DIR="$HOME/.claude/backups/sync"
+
+# Add repo directory to allowed paths for validation
+SYNC_ALLOWED_PATHS+=("$REPO_DIR")
 
 # ============================================================================
 # Usage and Help
@@ -32,14 +44,15 @@ USAGE:
   ./sync.sh <command> [options]
 
 COMMANDS:
-  deploy [--dry-run]   Deploy repo → live config (overwrite)
-  pull [--dry-run]     Pull live → repo (overwrite)
+  deploy [--dry-run]           Deploy repo → live config (overwrite)
+  pull [--dry-run] [--force]   Pull live → repo (overwrite)
   status               Show sync status and differences
   diff [file]          Show detailed diff for file(s)
   help                 Show this help message
 
 OPTIONS:
   --dry-run            Preview changes without modifying files
+  --force              Skip confirmation prompts (for scripted use)
 
 WORKFLOW:
   1. Experiment in live config (~/.claude/)
@@ -165,7 +178,8 @@ cmd_status() {
     local plugins_file="$REPO_DIR/claude-config/plugins.txt"
     if [ -f "$plugins_file" ]; then
         local repo_plugins=$(grep -v '^#' "$plugins_file" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
-        local live_plugins=$(claude plugin list 2>/dev/null | grep -E '^\s+❯' | wc -l | tr -d ' ')
+        local live_plugins
+        live_plugins=$(get_installed_plugins | wc -l | tr -d ' ')
 
         if [ "$repo_plugins" -ne "$live_plugins" ]; then
             format_status_line "diverged" "plugins" "DIVERGED"
@@ -295,9 +309,9 @@ cmd_deploy() {
         sync_file "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json" "$BACKUP_DIR" "$dry_run"
     fi
 
-    # Deploy api_key_helper.sh (with interpolation)
+    # Deploy api_key_helper.sh
     if [ -f "$REPO_DIR/claude-config/api_key_helper.sh" ]; then
-        deploy_api_key_helper "$dry_run"
+        sync_file "$REPO_DIR/claude-config/api_key_helper.sh" "$LIVE_DIR/api_key_helper.sh" "$BACKUP_DIR" "$dry_run"
     fi
 
     # Deploy agents directory
@@ -334,24 +348,30 @@ cmd_deploy() {
 
 cmd_pull() {
     local dry_run="${1:-false}"
+    local force="${2:-false}"
 
     echo "═══════════════════════════════════════════════════════════════"
     echo " Pull: Live Config → Repo"
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
-    if [ "$dry_run" = "false" ]; then
+    if [ "$dry_run" = "true" ]; then
+        echo -e "${BLUE}DRY-RUN MODE: No files will be modified${NC}"
+        echo ""
+    elif [ "$force" = "false" ]; then
         echo -e "${YELLOW}⚠  This will overwrite repo files with live config${NC}"
         echo "Affected: CLAUDE.md, settings.sync.json, agents/, skills/"
         echo ""
-        read -p "Continue? (yes/no): " -r confirm
+        local confirm=""
+        if ! read -t 30 -p "Continue? (yes/no, 30s timeout): " -r confirm; then
+            echo ""
+            echo "Timed out waiting for confirmation. Aborted."
+            exit 1
+        fi
         if [ "$confirm" != "yes" ]; then
             echo "Aborted"
             exit 0
         fi
-        echo ""
-    else
-        echo -e "${BLUE}DRY-RUN MODE: No files will be modified${NC}"
         echo ""
     fi
 
@@ -365,13 +385,9 @@ cmd_pull() {
         sync_file "$LIVE_DIR/settings.json" "$REPO_DIR/claude-config/settings.sync.json" "$BACKUP_DIR" "$dry_run"
     fi
 
-    # Pull api_key_helper.sh (with sanitization)
+    # Pull api_key_helper.sh
     if [ -f "$LIVE_DIR/api_key_helper.sh" ]; then
-        if [ "$dry_run" = "true" ]; then
-            echo -e "${BLUE}[DRY-RUN]${NC} Would sanitize and pull api_key_helper.sh"
-        else
-            sanitize_api_key_helper
-        fi
+        sync_file "$LIVE_DIR/api_key_helper.sh" "$REPO_DIR/claude-config/api_key_helper.sh" "$BACKUP_DIR" "$dry_run"
     fi
 
     # Pull agents directory
@@ -428,10 +444,14 @@ main() {
             ;;
         pull)
             local dry_run=false
-            if [ "${1:-}" = "--dry-run" ]; then
-                dry_run=true
-            fi
-            cmd_pull "$dry_run"
+            local force=false
+            for arg in "$@"; do
+                case "$arg" in
+                    --dry-run) dry_run=true ;;
+                    --force) force=true ;;
+                esac
+            done
+            cmd_pull "$dry_run" "$force"
             ;;
         status)
             cmd_status

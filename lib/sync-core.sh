@@ -10,6 +10,29 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
+# Detect OS for platform-specific commands
+readonly IS_MACOS=$([[ "$(uname -s)" == "Darwin" ]] && echo true || echo false)
+
+# ============================================================================
+# Dependency Checks
+# ============================================================================
+
+check_dependencies() {
+    local missing=()
+    command -v rsync &>/dev/null || missing+=(rsync)
+    command -v shasum &>/dev/null || missing+=(shasum)
+    command -v jq &>/dev/null || missing+=(jq)
+    command -v op &>/dev/null || missing+=("op (1Password CLI)")
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo -e "${RED}✗${NC} Missing required dependencies: ${missing[*]}"
+        echo "  Please install them and try again."
+        echo "  On macOS: brew install rsync jq"
+        echo "  1Password CLI: https://developer.1password.com/docs/cli/get-started/"
+        exit 1
+    fi
+}
+
 # ============================================================================
 # Backup Functions
 # ============================================================================
@@ -27,8 +50,11 @@ backup_file() {
         tar czf "$backup_file" -C "$(dirname "$file")" "$(basename "$file")" 2>/dev/null
         echo -e "${GREEN}✓${NC} Backed up: $backup_file"
 
-        # Keep only last 10 backups per file
-        ls -t "$backup_dir/$filename."*.tar.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
+        # Keep only last 10 backups per file (handles spaces in filenames safely)
+        find "$backup_dir" -maxdepth 1 -name "$filename.*.tar.gz" -print0 2>/dev/null | \
+            xargs -0 ls -t 2>/dev/null | tail -n +11 | while IFS= read -r old_backup; do
+                rm -f "$old_backup"
+            done
     fi
 }
 
@@ -45,8 +71,11 @@ backup_directory() {
         tar czf "$backup_file" -C "$(dirname "$dir")" "$(basename "$dir")" 2>/dev/null
         echo -e "${GREEN}✓${NC} Backed up: $backup_file"
 
-        # Keep only last 10 backups per directory
-        ls -t "$backup_dir/$dirname."*.tar.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
+        # Keep only last 10 backups per directory (handles spaces in filenames safely)
+        find "$backup_dir" -maxdepth 1 -name "$dirname.*.tar.gz" -print0 2>/dev/null | \
+            xargs -0 ls -t 2>/dev/null | tail -n +11 | while IFS= read -r old_backup; do
+                rm -f "$old_backup"
+            done
     fi
 }
 
@@ -117,6 +146,10 @@ directories_differ() {
 # Path Functions
 # ============================================================================
 
+# Allowed base paths for sync operations (can be extended by caller)
+# shellcheck disable=SC2034
+SYNC_ALLOWED_PATHS=("$HOME/.claude")
+
 expand_path() {
     local path="$1"
     # Expand ~ to home directory
@@ -128,15 +161,16 @@ validate_path() {
     local expanded=$(expand_path "$path")
 
     # Ensure path doesn't escape expected directories
-    case "$expanded" in
-        "$HOME/.claude"*|"$HOME/Developer/Claude-defaults"*)
-            return 0
-            ;;
-        *)
-            echo -e "${RED}✗${NC} Invalid path: $path"
-            return 1
-            ;;
-    esac
+    for allowed in "${SYNC_ALLOWED_PATHS[@]}"; do
+        case "$expanded" in
+            "$allowed"*)
+                return 0
+                ;;
+        esac
+    done
+
+    echo -e "${RED}✗${NC} Invalid path: $path (not in allowed paths)"
+    return 1
 }
 
 # ============================================================================
@@ -203,61 +237,6 @@ sync_directory() {
     echo -e "${GREEN}✓${NC} Synced directory: $source → $expanded_target"
 }
 
-# ============================================================================
-# API Key Sanitization
-# ============================================================================
-
-sanitize_api_key_helper() {
-    local live_helper="$HOME/.claude/api_key_helper.sh"
-    local repo_helper="claude-config/api_key_helper.sh"
-
-    if [ ! -f "$live_helper" ]; then
-        echo -e "${YELLOW}⚠${NC}  No API key helper found in live config"
-        return 0
-    fi
-
-    # Replace any hardcoded key values with env var reference
-    sed -E 's/ANTHROPIC_API_KEY="[^"]+"/ANTHROPIC_API_KEY="\$ANTHROPIC_API_KEY"/' \
-        "$live_helper" > "$repo_helper"
-
-    chmod +x "$repo_helper"
-    echo -e "${GREEN}✓${NC} Sanitized API key helper for repo"
-}
-
-deploy_api_key_helper() {
-    local repo_helper="claude-config/api_key_helper.sh"
-    local live_helper="$HOME/.claude/api_key_helper.sh"
-    local dry_run="${1:-false}"
-
-    if [ ! -f "$repo_helper" ]; then
-        echo -e "${YELLOW}⚠${NC}  No API key helper template in repo"
-        return 0
-    fi
-
-    if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-        echo -e "${YELLOW}⚠${NC}  Warning: ANTHROPIC_API_KEY not set in environment"
-        echo "   Add to ~/.zshrc: export ANTHROPIC_API_KEY='your-key'"
-        echo "   Skipping api_key_helper.sh deployment"
-        return 0
-    fi
-
-    if [ "$dry_run" = "true" ]; then
-        echo -e "${BLUE}[DRY-RUN]${NC} Would deploy API key helper with interpolated key"
-        return 0
-    fi
-
-    # Backup existing helper
-    if [ -f "$live_helper" ]; then
-        backup_file "$live_helper"
-    fi
-
-    # Read template, interpolate env var value
-    sed "s/\\\$ANTHROPIC_API_KEY/$ANTHROPIC_API_KEY/" \
-        "$repo_helper" > "$live_helper"
-
-    chmod +x "$live_helper"
-    echo -e "${GREEN}✓${NC} Deployed API key helper with key from \$ANTHROPIC_API_KEY"
-}
 
 # ============================================================================
 # Diff Functions
@@ -331,7 +310,20 @@ format_file_details() {
     fi
 
     local lines=$(wc -l < "$file" | tr -d ' ')
-    local modified=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file" 2>/dev/null || date -r "$file" "+%Y-%m-%d %H:%M:%S")
+    local modified
+
+    # Platform-specific stat command
+    if [ "$IS_MACOS" = "true" ]; then
+        modified=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file" 2>/dev/null)
+    else
+        # Linux stat format
+        modified=$(stat -c "%y" "$file" 2>/dev/null | cut -d'.' -f1)
+    fi
+
+    # Fallback if stat fails
+    if [ -z "$modified" ]; then
+        modified="unknown"
+    fi
 
     echo "$lines lines | Modified: $modified"
 }
@@ -345,53 +337,52 @@ save_sync_state() {
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local operation="$1"  # "deploy" or "pull"
 
-    # Start JSON structure
-    local json="{"
-    json+="\"last_${operation}\": \"$timestamp\","
-    json+="\"checksums\": {"
+    # Load existing state to preserve both timestamps
+    local existing_deploy="null"
+    local existing_pull="null"
 
-    # Add checksums for tracked files
-    local first=true
+    if [ -f "$state_file" ]; then
+        existing_deploy=$(jq -r '.last_deploy // "null"' "$state_file" 2>/dev/null || echo "null")
+        existing_pull=$(jq -r '.last_pull // "null"' "$state_file" 2>/dev/null || echo "null")
+    fi
 
-    # CLAUDE.md
+    # Update the appropriate timestamp
+    if [ "$operation" = "deploy" ]; then
+        existing_deploy="$timestamp"
+    else
+        existing_pull="$timestamp"
+    fi
+
+    # Build checksums object
+    local checksums="{}"
+
+    # Add checksums for each tracked file/directory
     if [ -f "CLAUDE.md" ]; then
-        [ "$first" = false ] && json+=","
-        json+="\"CLAUDE.md\": \"$(compute_checksum "CLAUDE.md")\""
-        first=false
+        checksums=$(echo "$checksums" | jq --arg v "$(compute_checksum "CLAUDE.md")" '. + {"CLAUDE.md": $v}')
     fi
 
-    # settings.sync.json
     if [ -f "claude-config/settings.sync.json" ]; then
-        [ "$first" = false ] && json+=","
-        json+="\"settings.json\": \"$(compute_checksum "claude-config/settings.sync.json")\""
-        first=false
+        checksums=$(echo "$checksums" | jq --arg v "$(compute_checksum "claude-config/settings.sync.json")" '. + {"settings.json": $v}')
     fi
 
-    # api_key_helper.sh
     if [ -f "claude-config/api_key_helper.sh" ]; then
-        [ "$first" = false ] && json+=","
-        json+="\"api_key_helper.sh\": \"$(compute_checksum "claude-config/api_key_helper.sh")\""
-        first=false
+        checksums=$(echo "$checksums" | jq --arg v "$(compute_checksum "claude-config/api_key_helper.sh")" '. + {"api_key_helper.sh": $v}')
     fi
 
-    # agents directory
     if [ -d "claude-config/agents" ]; then
-        [ "$first" = false ] && json+=","
-        json+="\"agents\": \"$(compute_directory_checksum "claude-config/agents")\""
-        first=false
+        checksums=$(echo "$checksums" | jq --arg v "$(compute_directory_checksum "claude-config/agents")" '. + {"agents": $v}')
     fi
 
-    # skills directory
     if [ -d "claude-config/skills" ]; then
-        [ "$first" = false ] && json+=","
-        json+="\"skills\": \"$(compute_directory_checksum "claude-config/skills")\""
-        first=false
+        checksums=$(echo "$checksums" | jq --arg v "$(compute_directory_checksum "claude-config/skills")" '. + {"skills": $v}')
     fi
 
-    json+="}}"
-
-    # Write to state file
-    echo "$json" | python3 -m json.tool > "$state_file" 2>/dev/null || echo "$json" > "$state_file"
+    # Build final JSON with jq
+    jq -n \
+        --arg deploy "$existing_deploy" \
+        --arg pull "$existing_pull" \
+        --argjson checksums "$checksums" \
+        '{last_deploy: $deploy, last_pull: $pull, checksums: $checksums}' > "$state_file"
 }
 
 load_sync_state() {
@@ -403,13 +394,33 @@ load_sync_state() {
         return
     fi
 
-    # Extract value using grep and sed (portable)
-    grep "\"$key\"" "$state_file" | sed -E 's/.*"([^"]+)".*/\1/' || echo "Never"
+    local value
+    value=$(jq -r ".$key // empty" "$state_file" 2>/dev/null)
+
+    if [ -z "$value" ] || [ "$value" = "null" ]; then
+        echo "Never"
+    else
+        echo "$value"
+    fi
 }
 
 # ============================================================================
 # Plugin Management
 # ============================================================================
+
+# Get list of installed plugins (handles different output formats)
+get_installed_plugins() {
+    local output
+    output=$(claude plugin list 2>/dev/null) || return 1
+
+    # Try different patterns to extract plugin names
+    # Pattern 1: lines with ❯ marker
+    # Pattern 2: lines starting with whitespace followed by plugin name
+    # Pattern 3: JSON output if --json is supported
+    echo "$output" | grep -E '^\s*(❯|•|-|\*)?\s*\S+@' | \
+        sed -E 's/^[[:space:]]*(❯|•|-|\*)?[[:space:]]*//' | \
+        awk '{print $1}' | sort -u
+}
 
 deploy_plugins() {
     local plugins_file="$1"
@@ -426,21 +437,36 @@ deploy_plugins() {
 
     echo -e "${GREEN}Installing plugins...${NC}"
 
+    local failed=0
+
     # Read plugins file and install each one
     while IFS= read -r line; do
         # Skip empty lines and comments
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
 
         # Trim whitespace
-        local plugin=$(echo "$line" | xargs)
+        local plugin
+        plugin=$(echo "$line" | xargs)
 
         echo "  → $plugin"
-        if claude plugin install "$plugin" 2>&1 | grep -q "already installed"; then
-            echo "    (already installed)"
+        local output
+        if output=$(claude plugin install "$plugin" 2>&1); then
+            if echo "$output" | grep -qi "already installed"; then
+                echo "    (already installed)"
+            else
+                echo "    (installed)"
+            fi
+        else
+            echo -e "    ${RED}(failed: $output)${NC}"
+            ((failed++))
         fi
     done < "$plugins_file"
 
-    echo -e "${GREEN}✓${NC} Plugins ready"
+    if [ $failed -gt 0 ]; then
+        echo -e "${YELLOW}⚠${NC}  $failed plugin(s) failed to install"
+    else
+        echo -e "${GREEN}✓${NC} Plugins ready"
+    fi
 }
 
 pull_plugins() {
@@ -453,7 +479,8 @@ pull_plugins() {
     fi
 
     # Get list of installed plugins
-    local installed=$(claude plugin list 2>/dev/null | grep -E '^\s+❯' | awk '{print $2}' | sort)
+    local installed
+    installed=$(get_installed_plugins)
 
     if [ -z "$installed" ]; then
         echo -e "${YELLOW}⚠${NC}  No plugins installed"
