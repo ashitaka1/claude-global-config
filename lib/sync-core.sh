@@ -477,6 +477,25 @@ plugins_differ() {
     [ "$repo_plugins" != "$live_plugins" ]
 }
 
+ensure_marketplace() {
+    local marketplace="$1"
+    local source="$2"
+
+    # Check if marketplace is already configured
+    if claude plugin marketplace list 2>/dev/null | grep -q "$marketplace"; then
+        return 0
+    fi
+
+    echo "  Adding marketplace: $marketplace"
+    if claude plugin marketplace add "$source" >/dev/null 2>&1; then
+        echo -e "  ${GREEN}✓${NC} Marketplace added"
+        return 0
+    else
+        echo -e "  ${RED}✗${NC} Failed to add marketplace"
+        return 1
+    fi
+}
+
 deploy_plugins() {
     local plugins_file="$1"
     local dry_run="${2:-false}"
@@ -490,7 +509,25 @@ deploy_plugins() {
         return 0
     fi
 
-    echo -e "${GREEN}Installing plugins...${NC}"
+    # Ensure required marketplaces are configured
+    # Extract unique marketplaces from plugins file
+    local marketplaces
+    marketplaces=$(grep -v '^#' "$plugins_file" | grep -v '^[[:space:]]*$' | \
+        grep '@' | sed 's/.*@//' | sort -u)
+
+    for marketplace in $marketplaces; do
+        case "$marketplace" in
+            claude-plugins-official)
+                ensure_marketplace "$marketplace" "anthropics/claude-plugins-official"
+                ;;
+            *)
+                # Unknown marketplace - try to add by name as GitHub repo
+                ensure_marketplace "$marketplace" "$marketplace" || true
+                ;;
+        esac
+    done
+
+    echo "Installing plugins..."
 
     local failed=0
 
