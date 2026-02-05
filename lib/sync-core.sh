@@ -102,8 +102,9 @@ compute_directory_checksum() {
         return
     fi
 
-    # Compute checksum of all files in directory
-    find "$dir" -type f -exec shasum -a 256 {} \; | sort | shasum -a 256 | awk '{print $1}'
+    # Compute checksum of all files in directory using relative paths
+    # This ensures identical content produces identical checksums regardless of location
+    (cd "$dir" && find . -type f -exec shasum -a 256 {} \; | sort | shasum -a 256 | awk '{print $1}')
 }
 
 files_differ() {
@@ -328,6 +329,42 @@ format_file_details() {
     echo "$lines lines | Modified: $modified"
 }
 
+get_file_mtime() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        echo "0"
+        return
+    fi
+    if [ "$IS_MACOS" = "true" ]; then
+        stat -f "%m" "$file" 2>/dev/null || echo "0"
+    else
+        stat -c "%Y" "$file" 2>/dev/null || echo "0"
+    fi
+}
+
+format_diverged_files() {
+    local label1="$1"
+    local file1="$2"
+    local label2="$3"
+    local file2="$4"
+
+    local mtime1=$(get_file_mtime "$file1")
+    local mtime2=$(get_file_mtime "$file2")
+    local details1=$(format_file_details "$file1")
+    local details2=$(format_file_details "$file2")
+
+    if [ "$mtime1" -gt "$mtime2" ]; then
+        echo -e "  ${label1}  ${GREEN}${details1}${NC}"
+        echo -e "  ${label2}  ${YELLOW}${details2}${NC}"
+    elif [ "$mtime2" -gt "$mtime1" ]; then
+        echo -e "  ${label1}  ${YELLOW}${details1}${NC}"
+        echo -e "  ${label2}  ${GREEN}${details2}${NC}"
+    else
+        echo "  ${label1}  ${details1}"
+        echo "  ${label2}  ${details2}"
+    fi
+}
+
 # ============================================================================
 # State Management
 # ============================================================================
@@ -420,6 +457,24 @@ get_installed_plugins() {
     echo "$output" | grep -E '^\s*(❯|•|-|\*)?\s*\S+@' | \
         sed -E 's/^[[:space:]]*(❯|•|-|\*)?[[:space:]]*//' | \
         awk '{print $1}' | sort -u
+}
+
+# Get list of plugins from plugins.txt
+get_repo_plugins() {
+    local plugins_file="$1"
+    if [ ! -f "$plugins_file" ]; then
+        return
+    fi
+    grep -v '^#' "$plugins_file" | grep -v '^[[:space:]]*$' | xargs -n1 | sort -u
+}
+
+plugins_differ() {
+    local plugins_file="$1"
+
+    local repo_plugins=$(get_repo_plugins "$plugins_file")
+    local live_plugins=$(get_installed_plugins)
+
+    [ "$repo_plugins" != "$live_plugins" ]
 }
 
 deploy_plugins() {

@@ -99,8 +99,7 @@ cmd_status() {
 
     if files_differ "$repo_claude" "$live_claude"; then
         format_status_line "diverged" "CLAUDE.md" "DIVERGED"
-        echo "  Repo:  $(format_file_details "$repo_claude")"
-        echo "  Live:  $(format_file_details "$live_claude")"
+        format_diverged_files "Repo:" "$repo_claude" "Live:" "$live_claude"
         ((issues++))
     else
         local lines=$(wc -l < "$repo_claude" 2>/dev/null | tr -d ' ' || echo "?")
@@ -113,8 +112,7 @@ cmd_status() {
 
     if files_differ "$repo_settings" "$live_settings"; then
         format_status_line "diverged" "settings.json" "DIVERGED"
-        echo "  Repo:  $(format_file_details "$repo_settings")"
-        echo "  Live:  $(format_file_details "$live_settings")"
+        format_diverged_files "Repo:" "$repo_settings" "Live:" "$live_settings"
         ((issues++))
     else
         local lines=$(wc -l < "$repo_settings" 2>/dev/null | tr -d ' ' || echo "?")
@@ -128,8 +126,7 @@ cmd_status() {
     if [ -f "$repo_helper" ] || [ -f "$live_helper" ]; then
         if files_differ "$repo_helper" "$live_helper"; then
             format_status_line "diverged" "api_key_helper.sh" "DIVERGED"
-            echo "  Repo:  $(format_file_details "$repo_helper")"
-            echo "  Live:  $(format_file_details "$live_helper")"
+            format_diverged_files "Repo:" "$repo_helper" "Live:" "$live_helper"
             ((issues++))
         else
             format_status_line "in-sync" "api_key_helper.sh"
@@ -294,39 +291,63 @@ cmd_deploy() {
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
+    # Build list of what differs
+    local affected=()
+    files_differ "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md" && affected+=("CLAUDE.md")
+    files_differ "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json" && affected+=("settings.json")
+    files_differ "$REPO_DIR/claude-config/api_key_helper.sh" "$LIVE_DIR/api_key_helper.sh" && affected+=("api_key_helper.sh")
+    directories_differ "$REPO_DIR/claude-config/agents" "$LIVE_DIR/agents" && affected+=("agents/")
+    directories_differ "$REPO_DIR/claude-config/skills" "$LIVE_DIR/skills" && affected+=("skills/")
+    plugins_differ "$REPO_DIR/claude-config/plugins.txt" && affected+=("plugins")
+
+    if [ ${#affected[@]} -eq 0 ]; then
+        echo -e "${GREEN}✓ Everything already in sync${NC}"
+        echo ""
+        echo "═══════════════════════════════════════════════════════════════"
+        return 0
+    fi
+
     if [ "$dry_run" = "true" ]; then
         echo -e "${BLUE}DRY-RUN MODE: No files will be modified${NC}"
         echo ""
     fi
 
+    local changes=0
+
     # Deploy CLAUDE.md
-    if [ -f "$REPO_DIR/CLAUDE.md" ]; then
+    if [[ " ${affected[*]} " =~ " CLAUDE.md " ]]; then
         sync_file "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Deploy settings.json
-    if [ -f "$REPO_DIR/claude-config/settings.sync.json" ]; then
+    if [[ " ${affected[*]} " =~ " settings.json " ]]; then
         sync_file "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Deploy api_key_helper.sh
-    if [ -f "$REPO_DIR/claude-config/api_key_helper.sh" ]; then
+    if [[ " ${affected[*]} " =~ " api_key_helper.sh " ]]; then
         sync_file "$REPO_DIR/claude-config/api_key_helper.sh" "$LIVE_DIR/api_key_helper.sh" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Deploy agents directory
-    if [ -d "$REPO_DIR/claude-config/agents" ]; then
+    if [[ " ${affected[*]} " =~ " agents/ " ]]; then
         sync_directory "$REPO_DIR/claude-config/agents" "$LIVE_DIR/agents" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Deploy skills directory
-    if [ -d "$REPO_DIR/claude-config/skills" ]; then
+    if [[ " ${affected[*]} " =~ " skills/ " ]]; then
         sync_directory "$REPO_DIR/claude-config/skills" "$LIVE_DIR/skills" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
-    # Deploy plugins (install from plugins.txt)
-    if [ -f "$REPO_DIR/claude-config/plugins.txt" ]; then
+    # Deploy plugins
+    if [[ " ${affected[*]} " =~ " plugins " ]]; then
         deploy_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
+        ((changes++))
     fi
 
     if [ "$dry_run" = "false" ]; then
@@ -355,19 +376,31 @@ cmd_pull() {
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
+    # Build list of what differs
+    local affected=()
+    files_differ "$LIVE_DIR/CLAUDE.md" "$REPO_DIR/CLAUDE.md" && affected+=("CLAUDE.md")
+    files_differ "$LIVE_DIR/settings.json" "$REPO_DIR/claude-config/settings.sync.json" && affected+=("settings.json")
+    files_differ "$LIVE_DIR/api_key_helper.sh" "$REPO_DIR/claude-config/api_key_helper.sh" && affected+=("api_key_helper.sh")
+    directories_differ "$LIVE_DIR/agents" "$REPO_DIR/claude-config/agents" && affected+=("agents/")
+    directories_differ "$LIVE_DIR/skills" "$REPO_DIR/claude-config/skills" && affected+=("skills/")
+    plugins_differ "$REPO_DIR/claude-config/plugins.txt" && affected+=("plugins")
+
+    if [ ${#affected[@]} -eq 0 ]; then
+        echo -e "${GREEN}✓ Everything already in sync${NC}"
+        echo ""
+        echo "═══════════════════════════════════════════════════════════════"
+        return 0
+    fi
+
     if [ "$dry_run" = "true" ]; then
         echo -e "${BLUE}DRY-RUN MODE: No files will be modified${NC}"
         echo ""
     elif [ "$force" = "false" ]; then
         echo -e "${YELLOW}⚠  This will overwrite repo files with live config${NC}"
-        echo "Affected: CLAUDE.md, settings.sync.json, agents/, skills/"
+        echo "Affected: ${affected[*]}"
         echo ""
         local confirm=""
-        if ! read -t 30 -p "Continue? (yes/no, 30s timeout): " -r confirm; then
-            echo ""
-            echo "Timed out waiting for confirmation. Aborted."
-            exit 1
-        fi
+        read -p "Continue? (yes/no): " -r confirm
         if [ "$confirm" != "yes" ]; then
             echo "Aborted"
             exit 0
@@ -375,33 +408,43 @@ cmd_pull() {
         echo ""
     fi
 
+    local changes=0
+
     # Pull CLAUDE.md
-    if [ -f "$LIVE_DIR/CLAUDE.md" ]; then
+    if [[ " ${affected[*]} " =~ " CLAUDE.md " ]]; then
         sync_file "$LIVE_DIR/CLAUDE.md" "$REPO_DIR/CLAUDE.md" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Pull settings.json
-    if [ -f "$LIVE_DIR/settings.json" ]; then
+    if [[ " ${affected[*]} " =~ " settings.json " ]]; then
         sync_file "$LIVE_DIR/settings.json" "$REPO_DIR/claude-config/settings.sync.json" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Pull api_key_helper.sh
-    if [ -f "$LIVE_DIR/api_key_helper.sh" ]; then
+    if [[ " ${affected[*]} " =~ " api_key_helper.sh " ]]; then
         sync_file "$LIVE_DIR/api_key_helper.sh" "$REPO_DIR/claude-config/api_key_helper.sh" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Pull agents directory
-    if [ -d "$LIVE_DIR/agents" ]; then
+    if [[ " ${affected[*]} " =~ " agents/ " ]]; then
         sync_directory "$LIVE_DIR/agents" "$REPO_DIR/claude-config/agents" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
     # Pull skills directory
-    if [ -d "$LIVE_DIR/skills" ]; then
+    if [[ " ${affected[*]} " =~ " skills/ " ]]; then
         sync_directory "$LIVE_DIR/skills" "$REPO_DIR/claude-config/skills" "$BACKUP_DIR" "$dry_run"
+        ((changes++))
     fi
 
-    # Pull plugins (update plugins.txt from installed plugins)
-    pull_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
+    # Pull plugins
+    if [[ " ${affected[*]} " =~ " plugins " ]]; then
+        pull_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
+        ((changes++))
+    fi
 
     if [ "$dry_run" = "false" ]; then
         save_sync_state "pull"
@@ -437,9 +480,16 @@ main() {
     case "$command" in
         deploy)
             local dry_run=false
-            if [ "${1:-}" = "--dry-run" ]; then
-                dry_run=true
-            fi
+            for arg in "$@"; do
+                case "$arg" in
+                    --dry-run) dry_run=true ;;
+                    *)
+                        echo -e "${RED}✗${NC} Unknown option: $arg"
+                        echo "Usage: ./sync.sh deploy [--dry-run]"
+                        exit 1
+                        ;;
+                esac
+            done
             cmd_deploy "$dry_run"
             ;;
         pull)
@@ -449,6 +499,11 @@ main() {
                 case "$arg" in
                     --dry-run) dry_run=true ;;
                     --force) force=true ;;
+                    *)
+                        echo -e "${RED}✗${NC} Unknown option: $arg"
+                        echo "Usage: ./sync.sh pull [--dry-run] [--force]"
+                        exit 1
+                        ;;
                 esac
             done
             cmd_pull "$dry_run" "$force"
