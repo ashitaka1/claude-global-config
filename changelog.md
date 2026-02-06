@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- `install.sh` now installs dependencies then runs `sync.sh deploy` instead of printing manual next steps
+- Documented `.sync` suffix naming convention in README-SYNC.md
+
+### Added
+- `templates/` directory to sync config (deploys to `~/.claude/templates/`)
+
+### Fixed
+- viam-claude/README.md: removed phantom skills, added missing ones, fixed install path
+
 ## [2026-02-06]
 
 ### Changed
