@@ -24,6 +24,10 @@ sync:
       target: ~/.claude/skills
       recursive: true
 
+    - source: templates
+      target: ~/.claude/templates
+      recursive: true
+
 ignore:
   live:
     - cache/**
