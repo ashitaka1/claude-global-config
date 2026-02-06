@@ -9,13 +9,11 @@ sync:
     - source: claude-config/settings.sync.json
       target: ~/.claude/settings.json
 
-    - source: claude-config/api_key_helper.sh
-      target: ~/.claude/api_key_helper.sh
-
-    - source: claude-config/statusline.sh
-      target: ~/.claude/statusline.sh
-
   directories:
+    - source: claude-config/scripts
+      target: ~/.claude/scripts
+      recursive: true
+
     - source: claude-config/agents
       target: ~/.claude/agents
       recursive: true

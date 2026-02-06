@@ -9,9 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 - `install.sh` now installs dependencies then runs `sync.sh deploy` instead of printing manual next steps
 - Documented `.sync` suffix naming convention in README-SYNC.md
+- Consolidated shell scripts into `claude-config/scripts/` directory (was individual files at `claude-config/` root)
+- Rewrote statusline with model name, context window bar, remote sync status, per-session color theming, and last user message
 
 ### Added
 - `templates/` directory to sync config (deploys to `~/.claude/templates/`)
+- `claude-config/scripts/terminal-color.sh` for TTY-based per-session accent colors
 
 ### Fixed
 - viam-claude/README.md: removed phantom skills, added missing ones, fixed install path

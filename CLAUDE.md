@@ -40,10 +40,12 @@ When modifying the sync system (`sync.sh`, `lib/sync-core.sh`, `.sync-config.yam
 claude-config/          # Canonical source for global config
   CLAUDE.md             # Global CLAUDE.md (deployed to ~/.claude/)
   agents/               # Workflow agents (deployed to ~/.claude/agents/)
+  scripts/              # Shell scripts (deployed to ~/.claude/scripts/)
+    api_key_helper.sh   # 1Password API key helper
+    statusline.sh       # Status line with model, git, context bar
+    terminal-color.sh   # Per-session TTY-based color theming
   skills/               # Slash commands (deployed to ~/.claude/skills/)
   settings.sync.json    # Settings (deployed to ~/.claude/settings.json)
-  api_key_helper.sh     # API key helper script
-  statusline.sh         # Shell status line script
   plugins.txt           # Plugin list (auto-installed on deploy)
 templates/              # Project templates
   CLAUDE.md             # Template for new project CLAUDE.md files

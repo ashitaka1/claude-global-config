@@ -81,6 +81,13 @@ The `viam-claude/` directory is domain-specific.
 
 ## Recently Completed
 
+✓ **Consolidated scripts directory and rewrote statusline** (2026-02-06)
+  - Moved `api_key_helper.sh` and `statusline.sh` into `claude-config/scripts/`
+  - Rewrote statusline with model name, context window bar, remote sync status, per-session color theming, and last user message
+  - Added `terminal-color.sh` for TTY-based per-session accent colors
+  - Updated `.sync-config.yaml` to use directory sync for scripts
+  - Updated settings, README-SYNC.md, and project CLAUDE.md
+
 ✓ **Simple doc and config fixes** (2026-02-06)
   - Documented `.sync` suffix naming convention in README-SYNC.md
   - Updated viam-claude/README.md with correct skills and install path
