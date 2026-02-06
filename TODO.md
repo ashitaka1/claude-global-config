@@ -4,9 +4,9 @@
 
 ## Functional Gaps
 
-### 2. Missing sync for templates directory
+### 1. Missing sync for templates directory
 
-`templates/project_spec.md` exists but isn't synced to `~/.claude/templates/` for global access.
+`templates/` exists but isn't synced to `~/.claude/templates/` for global access.
 
 **Fix:** Add to `.sync-config.yaml`:
 ```yaml
@@ -15,19 +15,17 @@ directories:
     target: ~/.claude/templates
 ```
 
-### 3. No sync for `.claude/test-proposals/`
+### 2. No sync for `.claude/test-proposals/`
 
-CLAUDE.md references `.claude/test-proposals/<branch-name>.md` but this directory isn't in the sync configuration.
-
-**Note:** This is a live-only directory (generated during workflow), probably shouldn't sync back to repo.
+The global CLAUDE.md references `.claude/test-proposals/<branch-name>.md` but this directory isn't in the sync configuration. This is a live-only directory generated during workflow and likely shouldn't sync back to repo.
 
 ---
 
 ## Robustness Issues
 
-### 4. Platform-specific code in `format_file_details()`
+### 3. Platform-specific code in `format_file_details()`
 
-**Location:** `lib/sync-core.sh:334` (line number may have changed)
+**Location:** `lib/sync-core.sh` (in `format_file_details`)
 
 ```bash
 stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file"
@@ -37,9 +35,9 @@ This is macOS syntax. GNU `stat` (Linux) uses `--format`.
 
 **Fix:** Detect platform and use appropriate syntax.
 
-### 5. Plugin list parsing is fragile
+### 4. Plugin list parsing is fragile
 
-**Location:** `lib/sync-core.sh:456` (line number may have changed)
+**Location:** `lib/sync-core.sh` (in plugin sync functions)
 
 ```bash
 grep -E '^\s+❯' | awk '{print $2}'
@@ -53,7 +51,7 @@ This depends on exact `claude plugin list` output format which may change.
 
 ## Missing Features
 
-### 6. No `rollback` command
+### 5. No `rollback` command
 
 Backups are created but no easy way to restore from them.
 
@@ -63,16 +61,20 @@ Backups are created but no easy way to restore from them.
 ./sync.sh backups list
 ```
 
-### 7. No `verify` command
+### 6. No `verify` command
 
 Would confirm live config matches expected state after deploy:
 ```bash
 ./sync.sh verify  # Exit 0 if in sync, non-zero otherwise
 ```
 
-### 8. No `uninstall` / `reset` command
+### 7. No `uninstall` / `reset` command
 
 No way to cleanly remove the configuration or reset to defaults.
+
+### 8. Project start script
+
+Write a script or skill that scaffolds a new project from templates (`templates/CLAUDE.md`, `templates/project_spec.md`), copies them into a target directory, and fills in placeholders.
 
 ---
 
@@ -80,7 +82,7 @@ No way to cleanly remove the configuration or reset to defaults.
 
 ### 9. `settings.sync.json` naming convention undocumented
 
-The `.sync` suffix isn't explained anywhere—clarify that files with `.sync` in the name have repo-canonical versions that differ from live files.
+The `.sync` suffix isn't explained anywhere — clarify that files with `.sync` in the name have repo-canonical versions that differ from live files.
 
 ### 10. Viam plugin should be optional
 
@@ -99,13 +101,20 @@ The `viam-claude/` directory is domain-specific.
 - Make it a wrapper: `exec ./sync.sh deploy "$@"`
 - Keep it as a simple entry point for new users
 
-### 12. Project scaffolding from templates
+### 12. viam-claude/README.md is out of date
 
-Templates exist (`templates/CLAUDE.md`, `templates/project_spec.md`) but there's no automated way to scaffold a new project from them. Consider a skill or command that copies templates into a target directory and fills in placeholders.
+Lists skills that don't exist (`/cycle`, `/trial-start`, `/trial-stop`, `/trial-status`) and is missing skills that do (`/dataset-create`, `/dataset-delete`, `/viam-guide`). Install path references a stale location.
 
 ---
 
 ## Recently Completed
+
+✓ **Split CLAUDE.md into global and project-level files** (2026-02-06)
+  - Global config moved to `claude-config/CLAUDE.md`
+  - Repo root CLAUDE.md rewritten as project-specific config
+  - Added `templates/CLAUDE.md` for new projects
+  - Simplified claude-md-updater and project-spec-updater agents
+  - Streamlined README-SYNC.md, removed stale API key instructions
 
 ✓ **Branch naming convention aligned across all files** (2026-02-06)
   - Updated pre-work-check agent to match `<user>/feature-*` and `<user>/fix-*` patterns from CLAUDE.md

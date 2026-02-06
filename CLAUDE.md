@@ -19,7 +19,7 @@ This is a Claude Code global configuration repository. It manages:
 - Project templates (`templates/`)
 - A Viam robotics plugin (`viam-claude/`)
 
-See `project_spec.md` for technical architecture and decisions.
+See `project_spec.md` for technical architecture and decisions. See [TODO.md](TODO.md) for known issues and improvement opportunities.
 
 ## Project-Specific Conventions
 
