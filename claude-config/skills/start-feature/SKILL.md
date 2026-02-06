@@ -14,7 +14,7 @@ Create a new feature branch and immediately enter guided feature development.
 
 ## What it does
 
-1. Creates a new branch named `feature/<feature-name>`
+1. Creates a new branch following the project's branch naming conventions (default: `<user>/feature-<name>`)
 2. Switches to that branch
 3. Launches `/feature-dev:feature-dev` for guided development
 
@@ -24,7 +24,7 @@ Create a new feature branch and immediately enter guided feature development.
 /start-feature user-authentication
 ```
 
-This creates `feature/user-authentication` and enters the feature-dev workflow.
+This creates `youruser/feature-user-authentication` and enters the feature-dev workflow.
 
 ## Implementation
 

@@ -4,19 +4,6 @@
 
 ---
 
-## Critical Issues
-
-### 1. Branch naming mismatch between CLAUDE.md and pre-work-check agent
-
-**Location:** `CLAUDE.md` vs `claude-config/agents/pre-work-check.md`
-
-- CLAUDE.md specifies: `<user>/feature-<feature-label>` and `<user>/fix-<fix-label>`
-- pre-work-check looks for: `feature/*` or `fix/*`
-
-**Fix:** Align the patterns—either update CLAUDE.md or update pre-work-check to match.
-
----
-
 ## Functional Gaps
 
 ### 2. Missing sync for templates directory
@@ -117,6 +104,10 @@ The `viam-claude/` directory is domain-specific.
 ---
 
 ## Recently Completed
+
+✓ **Branch naming convention aligned across all files** (2026-02-06)
+  - Updated pre-work-check agent to match `<user>/feature-*` and `<user>/fix-*` patterns from CLAUDE.md
+  - Fixed start-feature skill description and examples to use the same convention
 
 ✓ **`.sync-config.yaml` is now used programmatically** (2026-02-05)
   - Implemented config-driven sync using `yq`

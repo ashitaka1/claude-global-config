@@ -16,7 +16,7 @@ Run these checks:
    git branch --show-current
    ```
    - If on `main`: BLOCK and remind user to run `/start-feature <name>`
-   - If on `feature/*` or `fix/*` branch: PASS
+   - If on a branch matching `*/feature-*` or `*/fix-*`: PASS (e.g. `username/feature-auth`, `username/fix-crash`)
 
 2. **Clean state check**
    ```bash
