@@ -164,11 +164,7 @@ cmd_status() {
         echo -e "${GREEN}All files synchronized. No action needed.${NC}"
     else
         echo -e "${YELLOW}⚠ $issues item(s) need attention${NC}"
-        echo ""
-        echo "Next Steps:"
-        echo "  1. Review changes: ./sync.sh diff"
-        echo "  2. Preview pull:   ./sync.sh pull --dry-run"
-        echo "  3. Pull to repo:   ./sync.sh pull"
+        echo "  Review changes: ./sync.sh diff"
     fi
 
     echo ""
