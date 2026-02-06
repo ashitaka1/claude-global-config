@@ -99,6 +99,19 @@
       "Skill(*)"
     ]
   },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ \"$(git branch --show-current 2>/dev/null)\" = \"main\" ]; then echo 'BLOCKED: You tried to work on main. Use proper development protocol.' && exit 2; fi"
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh",
@@ -113,6 +126,5 @@
     "explanatory-output-style@claude-plugins-official": true,
     "learning-output-style@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true
-  },
-  "model": "opus"
+  }
 }

@@ -1,6 +1,6 @@
 ---
 name: pre-work-check
-description: Verify development environment is ready before starting work (feature branch exists, tests passing)
+description: Verify development environment is ready before starting work (feature branch exists, tests passing). Use this as soon as the user asks you to make changes.
 tools: Bash
 model: haiku
 ---

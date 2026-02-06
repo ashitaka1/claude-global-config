@@ -7,9 +7,11 @@ Global configuration and reusable components for Claude Code development workflo
 ### Global Configuration (`claude-config/`)
 
 - **CLAUDE.md** - Global development standards, workflow, and testing philosophy (deployed to `~/.claude/CLAUDE.md`)
-- **settings.sync.json** - Pre-approved permissions for safe commands
-- **api_key_helper.sh** - API key management helper
-- **statusline.sh** - Shell status line script
+- **settings.sync.json** - Pre-approved permissions for safe commands, includes hook to prevent accidental edits on main
+- **scripts/** - Shell utilities (deployed to `~/.claude/scripts/`)
+  - `api_key_helper.sh` - API key management helper
+  - `statusline.sh` - Status line with model, git status, sync state, context bar
+  - `terminal-color.sh` - Per-session TTY-based color theming
 
 ### Agents (`claude-config/agents/`)
 
@@ -26,7 +28,7 @@ Workflow automation agents:
 
 ### Skills (`claude-config/skills/`)
 
-- `/start-feature <name>` - Create branch and launch guided development
+- `/start-feature <name>` - Create worktree with feature branch and launch guided development
 
 ### Templates (`templates/`)
 
