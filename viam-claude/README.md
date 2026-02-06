@@ -7,13 +7,11 @@ Claude Code plugin for Viam robotics platform development.
 ### Skills (Slash Commands)
 
 - `/reload` - Hot-reload module to connected machine
-- `/cycle` - Execute a single test cycle on the arm
-- `/trial-start` - Start continuous trial (background cycling)
-- `/trial-stop` - Stop active trial, return cycle count
-- `/trial-status` - Check trial status and cycle count
 - `/logs` - View machine logs (optionally filtered)
 - `/status` - Get machine/component health status
 - `/gen-module` - Generate new Viam module scaffold
+- `/dataset-create` - Create a dataset
+- `/dataset-delete` - Delete a dataset
 
 ### Documentation
 
@@ -22,14 +20,14 @@ Claude Code plugin for Viam robotics platform development.
   - Go module development with RDK
   - Data export and analysis techniques
 
-The guide is also available as a non-invocable skill that Claude auto-loads for context.
+The guide is also available as a non-invocable skill (`/viam-guide`) that Claude auto-loads for context.
 
 ## Installation
 
-From your project directory:
+From the repo root:
 
 ```bash
-/plugin install /Users/apr/Developer/Claude-defaults/viam-claude
+claude plugin install ./viam-claude
 ```
 
 Or add to your project's `.claude/settings.json`:
@@ -55,6 +53,9 @@ Once installed, slash commands are available:
 
 # View logs
 /logs error
+
+# Create a dataset
+/dataset-create
 ```
 
 Claude will also have access to Viam best practices when working on your Viam projects.
