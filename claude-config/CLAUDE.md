@@ -4,6 +4,8 @@ This file provides global guidance to Claude Code (claude.ai/code) across all pr
 
 ## Engineering Guidelines
 
+NEVER make changes directly on main. Follow the development workflow.
+
 ### Security
 - Always run tests before committing
 - Always use environment variables for secrets
@@ -33,7 +35,7 @@ This file provides global guidance to Claude Code (claude.ai/code) across all pr
 
 ### Branches
 
-1. Use branches for all development. Never commit to main.
+1. ALWAYS use branches for all development. Never commit to main.
 2. When developing solo, merge branches directly; when contributing to a repo use PRs.
 3. **Branch naming:** Unless project specifies otherwise, use:
    - `<user>/feature-<feature-label>` for features
@@ -66,14 +68,14 @@ This file provides global guidance to Claude Code (claude.ai/code) across all pr
 ### Starting Work
 
 1. **Run `pre-work-check` agent** — verifies feature branch and passing tests
-2. If on main, use `/start-feature <name>` to create branch and begin guided development
+2. If on main, use `/start-feature <name>` to create a worktree and begin guided development
 3. Never commit directly to main
 
 **Important:** After context compaction, branch state may be lost. Always verify with `pre-work-check` before continuing work.
 
 ### Feature Development
 
-Use `/start-feature <name>` to create a branch and enter guided feature development. This launches the feature-dev workflow which provides:
+Use `/start-feature <name>` to create a worktree with a feature branch and enter guided feature development. This launches the feature-dev workflow which provides:
 - Discovery and clarifying questions
 - Agent-driven codebase exploration
 - Architecture design with trade-off analysis
@@ -137,7 +139,8 @@ When asked to commit:
 1. **Delegate to `completion-checker` agent** — verify branch is ready to merge
 2. Address any blocking issues
 3. Merge branch to main (solo) or open PR (collaborative)
-4. Use `retro-reviewer` agent periodically to review Claude Code usage and suggest improvements
+4. Clean up the worktree: `git worktree remove .worktrees/<dir>` or use `/clean_gone`
+5. Use `retro-reviewer` agent periodically to review Claude Code usage and suggest improvements
 
 ---
 
