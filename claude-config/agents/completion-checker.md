@@ -18,7 +18,7 @@ Run through the completion checklist:
 
 2. **Documentation updated**
    - Check if recent commits include doc changes (README.md, CLAUDE.md, changelog.md, project_spec.md)
-   - Verify CLAUDE.md "Current Status" is accurate if status changed
+   - Verify project CLAUDE.md "Current Status" is accurate if status changed
    - Verify changelog.md has entries for user-facing changes
 
 3. **Code quality**

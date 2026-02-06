@@ -4,10 +4,12 @@ Global configuration and reusable components for Claude Code development workflo
 
 ## What's Included
 
-### Global Configuration
+### Global Configuration (`claude-config/`)
 
-- **CLAUDE.md** - Global development standards, workflow, and testing philosophy
-- **~/.claude/settings.json** - Pre-approved permissions for safe commands
+- **CLAUDE.md** - Global development standards, workflow, and testing philosophy (deployed to `~/.claude/CLAUDE.md`)
+- **settings.sync.json** - Pre-approved permissions for safe commands
+- **api_key_helper.sh** - API key management helper
+- **statusline.sh** - Shell status line script
 
 ### Agents (`claude-config/agents/`)
 
@@ -16,7 +18,7 @@ Workflow automation agents:
 - `pre-work-check` - Verify branch and tests before starting work
 - `test-scrutinizer` - Two-phase test plan review
 - `readme-updater` - Update user documentation
-- `claude-md-updater` - Update workflow documentation
+- `claude-md-updater` - Update project-level workflow documentation
 - `project-spec-updater` - Update technical documentation
 - `changelog-updater` - Maintain changelog
 - `completion-checker` - Pre-merge quality gate
@@ -26,14 +28,14 @@ Workflow automation agents:
 
 - `/start-feature <name>` - Create branch and launch guided development
 
-### Templates
+### Templates (`templates/`)
 
-- `templates/project_spec.md` - Project specification template
+- `CLAUDE.md` - Project-level CLAUDE.md template
+- `project_spec.md` - Project specification template
 
 ### Plugins
 
 - **viam-claude** - Viam robotics platform development tools
-  - Install: `/plugin install /Users/apr/Developer/Claude-defaults/viam-claude`
 
 ## Installation
 
@@ -43,12 +45,8 @@ Use the built-in sync system to manage configuration:
 
 ```bash
 # Clone this repository
-git clone <repo-url> ~/Developer/Claude-defaults
-cd ~/Developer/Claude-defaults
-
-# Set up API key (if using api_key_helper)
-echo 'export ANTHROPIC_API_KEY="your-key"' >> ~/.zshrc
-source ~/.zshrc
+git clone <repo-url>
+cd claude-global-config
 
 # Deploy to live config (installs plugins automatically)
 ./sync.sh deploy
@@ -57,7 +55,7 @@ source ~/.zshrc
 ### Manual Installation
 
 Alternatively, manually copy files:
-- `CLAUDE.md` → `~/.claude/CLAUDE.md`
+- `claude-config/CLAUDE.md` → `~/.claude/CLAUDE.md`
 - `claude-config/agents/*` → `~/.claude/agents/*`
 - `claude-config/skills/*` → `~/.claude/skills/*`
 - `claude-config/settings.sync.json` → `~/.claude/settings.json`
@@ -76,7 +74,6 @@ Alternatively, manually copy files:
 
 2. **Check Status**
    ```bash
-   cd ~/Developer/Claude-defaults
    ./sync.sh status
    ```
 
@@ -102,7 +99,6 @@ Alternatively, manually copy files:
 6. **Deploy on Other Machines**
    ```bash
    # On another machine
-   cd ~/Developer/Claude-defaults
    git pull
    ./sync.sh deploy
    ```
@@ -111,14 +107,13 @@ See [README-SYNC.md](README-SYNC.md) for detailed sync documentation.
 
 ## Usage
 
-1. Copy `CLAUDE.md` to your home directory's `claude-config/` folder if you want truly global defaults
-2. Or keep project-specific by copying sections to individual project CLAUDE.md files
-3. Install viam-claude plugin for Viam projects: `/plugin install <path-to-this-repo>/viam-claude`
-4. Use agents during development: `pre-work-check`, `test-scrutinizer`, `completion-checker`, etc.
+1. Run `./sync.sh deploy` to install global config to `~/.claude/`
+2. Copy `templates/CLAUDE.md` and `templates/project_spec.md` into new projects for project-level config
+3. Use agents during development: `pre-work-check`, `test-scrutinizer`, `completion-checker`, etc.
 
 ## Workflow
 
-See `CLAUDE.md` for the complete development workflow, including:
+See `claude-config/CLAUDE.md` for the complete development workflow, including:
 - Starting work on feature branches
 - Two-phase test scrutiny
 - Parallel documentation updates on commit
@@ -129,4 +124,4 @@ See `CLAUDE.md` for the complete development workflow, including:
 - **Self-documenting code over comments**
 - **Test custom logic, not libraries**
 - **Never discard uncommitted work**
-- **Separate concerns**: CLAUDE.md (workflow) vs project_spec.md (technical) vs README.md (users)
+- **Separate concerns**: Global CLAUDE.md (standards) vs project CLAUDE.md (project context) vs project_spec.md (technical) vs README.md (users)

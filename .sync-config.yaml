@@ -3,7 +3,7 @@
 
 sync:
   files:
-    - source: CLAUDE.md
+    - source: claude-config/CLAUDE.md
       target: ~/.claude/CLAUDE.md
 
     - source: claude-config/settings.sync.json

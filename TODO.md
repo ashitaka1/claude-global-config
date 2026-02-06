@@ -1,7 +1,5 @@
 # TODO: Remaining Improvement Opportunities
 
-*Based on analysis from 2026-01-26, filtered for items not yet addressed*
-
 ---
 
 ## Functional Gaps
@@ -100,6 +98,10 @@ The `viam-claude/` directory is domain-specific.
 - Remove `install.sh`
 - Make it a wrapper: `exec ./sync.sh deploy "$@"`
 - Keep it as a simple entry point for new users
+
+### 12. Project scaffolding from templates
+
+Templates exist (`templates/CLAUDE.md`, `templates/project_spec.md`) but there's no automated way to scaffold a new project from them. Consider a skill or command that copies templates into a target directory and fills in placeholders.
 
 ---
 

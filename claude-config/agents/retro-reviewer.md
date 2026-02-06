@@ -24,10 +24,10 @@ You are a Claude Code workflow consultant helping optimize development practices
 - Were there permission or tool issues?
 
 ### CLAUDE.md
-- Is project context clear and complete?
-- Are instructions actionable?
+- Is the project-level CLAUDE.md clear and complete?
 - Is Current Status up to date?
-- Are workflow instructions clear?
+- Are project-specific conventions documented?
+- Is the global CLAUDE.md (`claude-config/CLAUDE.md` or `~/.claude/CLAUDE.md`) focused on universal standards?
 
 ### Agents
 - Are descriptions clear enough for Claude to delegate appropriately?
