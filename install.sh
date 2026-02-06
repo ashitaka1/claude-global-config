@@ -54,10 +54,6 @@ else
 fi
 
 echo ""
-echo "═══════════════════════════════════════════════════════════════"
-echo -e "${GREEN}✓${NC} All dependencies installed"
+echo -e "${GREEN}✓${NC} All dependencies installed. Running deploy..."
 echo ""
-echo "Next steps:"
-echo "  1. Sign in to 1Password CLI: op signin"
-echo "  2. Deploy config: ./sync.sh deploy"
-echo "═══════════════════════════════════════════════════════════════"
+exec ./sync.sh deploy
