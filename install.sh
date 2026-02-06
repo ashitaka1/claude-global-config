@@ -34,7 +34,7 @@ echo "Installing dependencies..."
 echo ""
 
 # Install each dependency
-for pkg in rsync jq; do
+for pkg in rsync jq yq; do
     if command -v "$pkg" &>/dev/null; then
         echo -e "${GREEN}✓${NC} $pkg (already installed)"
     else

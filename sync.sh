@@ -26,6 +26,7 @@ readonly REPO_DIR="$SCRIPT_DIR"
 readonly LIVE_DIR="$HOME/.claude"
 readonly STATE_FILE="$REPO_DIR/.sync-state.json"
 readonly BACKUP_DIR="$HOME/.claude/backups/sync"
+readonly CONFIG_FILE="$SCRIPT_DIR/.sync-config.yaml"
 
 # Add repo directory to allowed paths for validation
 SYNC_ALLOWED_PATHS+=("$REPO_DIR")
@@ -92,86 +93,51 @@ cmd_status() {
     echo ""
 
     local issues=0
+    local config_json=$(parse_sync_config "$CONFIG_FILE" "$REPO_DIR")
 
-    # Check CLAUDE.md
-    local repo_claude="$REPO_DIR/CLAUDE.md"
-    local live_claude="$LIVE_DIR/CLAUDE.md"
+    # Check each file from config
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
 
-    if files_differ "$repo_claude" "$live_claude"; then
-        format_status_line "diverged" "CLAUDE.md" "DIVERGED"
-        format_diverged_files "Repo:" "$repo_claude" "Live:" "$live_claude"
-        ((issues++))
-    else
-        local lines=$(wc -l < "$repo_claude" 2>/dev/null | tr -d ' ' || echo "?")
-        format_status_line "in-sync" "CLAUDE.md" "(${lines} lines)"
-    fi
-
-    # Check settings.json
-    local repo_settings="$REPO_DIR/claude-config/settings.sync.json"
-    local live_settings="$LIVE_DIR/settings.json"
-
-    if files_differ "$repo_settings" "$live_settings"; then
-        format_status_line "diverged" "settings.json" "DIVERGED"
-        format_diverged_files "Repo:" "$repo_settings" "Live:" "$live_settings"
-        ((issues++))
-    else
-        local lines=$(wc -l < "$repo_settings" 2>/dev/null | tr -d ' ' || echo "?")
-        format_status_line "in-sync" "settings.json" "(${lines} lines)"
-    fi
-
-    # Check api_key_helper.sh
-    local repo_helper="$REPO_DIR/claude-config/api_key_helper.sh"
-    local live_helper="$LIVE_DIR/api_key_helper.sh"
-
-    if [ -f "$repo_helper" ] || [ -f "$live_helper" ]; then
-        if files_differ "$repo_helper" "$live_helper"; then
-            format_status_line "diverged" "api_key_helper.sh" "DIVERGED"
-            format_diverged_files "Repo:" "$repo_helper" "Live:" "$live_helper"
+        if files_differ "$source" "$target"; then
+            format_status_line "diverged" "$name" "DIVERGED"
+            format_diverged_files "Repo:" "$source" "Live:" "$target"
             ((issues++))
         else
-            format_status_line "in-sync" "api_key_helper.sh"
+            if [ -f "$source" ]; then
+                local lines=$(wc -l < "$source" 2>/dev/null | tr -d ' ' || echo "?")
+                format_status_line "in-sync" "$name" "(${lines} lines)"
+            else
+                format_status_line "in-sync" "$name"
+            fi
         fi
-    fi
+    done < <(get_sync_files "$config_json")
 
-    # Check agents directory
-    local repo_agents="$REPO_DIR/claude-config/agents"
-    local live_agents="$LIVE_DIR/agents"
+    # Check each directory from config
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
 
-    if directories_differ "$repo_agents" "$live_agents"; then
-        format_status_line "diverged" "agents/" "DIVERGED"
+        if directories_differ "$source" "$target"; then
+            format_status_line "diverged" "$name" "DIVERGED"
 
-        # Count files in each
-        local repo_count=$(find "$repo_agents" -type f 2>/dev/null | wc -l | tr -d ' ')
-        local live_count=$(find "$live_agents" -type f 2>/dev/null | wc -l | tr -d ' ')
+            # Count files in each
+            local repo_count=$(find "$source" -type f 2>/dev/null | wc -l | tr -d ' ')
+            local live_count=$(find "$target" -type f 2>/dev/null | wc -l | tr -d ' ')
 
-        echo "  Repo:  $repo_count files"
-        echo "  Live:  $live_count files"
-        ((issues++))
-    else
-        local count=$(find "$repo_agents" -type f 2>/dev/null | wc -l | tr -d ' ')
-        format_status_line "in-sync" "agents/" "($count files)"
-    fi
+            echo "  Repo:  $repo_count files"
+            echo "  Live:  $live_count files"
+            ((issues++))
+        else
+            local count=$(find "$source" -type f 2>/dev/null | wc -l | tr -d ' ')
+            format_status_line "in-sync" "$name" "($count files)"
+        fi
+    done < <(get_sync_directories "$config_json")
 
-    # Check skills directory
-    local repo_skills="$REPO_DIR/claude-config/skills"
-    local live_skills="$LIVE_DIR/skills"
-
-    if directories_differ "$repo_skills" "$live_skills"; then
-        format_status_line "diverged" "skills/" "DIVERGED"
-
-        # Count directories in each
-        local repo_count=$(find "$repo_skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-        local live_count=$(find "$live_skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-
-        echo "  Repo:  $repo_count skill(s)"
-        echo "  Live:  $live_count skill(s)"
-        ((issues++))
-    else
-        local count=$(find "$repo_skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-        format_status_line "in-sync" "skills/" "($count skill(s))"
-    fi
-
-    # Check plugins
+    # Check plugins (separate mechanism)
     local plugins_file="$REPO_DIR/claude-config/plugins.txt"
     if [ -f "$plugins_file" ]; then
         local repo_plugins=$(grep -v '^#' "$plugins_file" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
@@ -215,6 +181,7 @@ cmd_status() {
 
 cmd_diff() {
     local target="${1:-}"
+    local config_json=$(parse_sync_config "$CONFIG_FILE" "$REPO_DIR")
 
     if [ -z "$target" ]; then
         # Show all diffs
@@ -223,60 +190,85 @@ cmd_diff() {
         echo "═══════════════════════════════════════════════════════════════"
         echo ""
 
-        # CLAUDE.md
-        if files_differ "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md"; then
-            echo "─── CLAUDE.md ─────────────────────────────────────────────"
-            show_diff "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md"
-            echo ""
-        fi
+        # Check each file from config
+        while IFS= read -r entry; do
+            local source=$(extract_field "$entry" "source")
+            local target_path=$(extract_field "$entry" "target")
+            local name=$(extract_field "$entry" "name")
 
-        # settings.json
-        if files_differ "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json"; then
-            echo "─── settings.json ─────────────────────────────────────────"
-            show_diff "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json"
-            echo ""
-        fi
+            if files_differ "$source" "$target_path"; then
+                echo "─── $name ─────────────────────────────────────────────"
+                show_diff "$source" "$target_path"
+                echo ""
+            fi
+        done < <(get_sync_files "$config_json")
 
-        # agents
-        if directories_differ "$REPO_DIR/claude-config/agents" "$LIVE_DIR/agents"; then
-            echo "─── agents/ ───────────────────────────────────────────────"
-            echo "Directories differ. Use 'diff agents' for details."
-            echo ""
-        fi
+        # Check each directory from config
+        while IFS= read -r entry; do
+            local source=$(extract_field "$entry" "source")
+            local target_path=$(extract_field "$entry" "target")
+            local name=$(extract_field "$entry" "name")
 
-        # skills
-        if directories_differ "$REPO_DIR/claude-config/skills" "$LIVE_DIR/skills"; then
-            echo "─── skills/ ───────────────────────────────────────────────"
-            echo "Directories differ. Use 'diff skills' for details."
-            echo ""
-        fi
+            if directories_differ "$source" "$target_path"; then
+                echo "─── $name ─────────────────────────────────────────────"
+                echo "Directories differ. Use 'diff $name' for details."
+                echo ""
+            fi
+        done < <(get_sync_directories "$config_json")
 
         return
     fi
 
-    # Show specific file diff
-    case "$target" in
-        CLAUDE.md)
-            show_diff "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md"
-            ;;
-        settings.json|settings)
-            show_diff "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json"
-            ;;
-        api_key_helper.sh|api_key_helper)
-            show_diff "$REPO_DIR/claude-config/api_key_helper.sh" "$LIVE_DIR/api_key_helper.sh"
-            ;;
-        agents)
-            diff -ur "$REPO_DIR/claude-config/agents" "$LIVE_DIR/agents" || true
-            ;;
-        skills)
-            diff -ur "$REPO_DIR/claude-config/skills" "$LIVE_DIR/skills" || true
-            ;;
-        *)
-            echo -e "${RED}✗${NC} Unknown target: $target"
-            echo "Valid targets: CLAUDE.md, settings, api_key_helper, agents, skills"
-            exit 1
-            ;;
-    esac
+    # Show specific target diff - search config for match
+    local found=false
+
+    # Search files
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target_path=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+
+        # Match on name (with or without extension variants)
+        local base_name="${name%.*}"
+        local target_base="${target%.*}"
+        if [[ "$name" == "$target" ]] || [[ "$base_name" == "$target_base" ]] || [[ "$base_name" == "$target" ]]; then
+            show_diff "$source" "$target_path"
+            found=true
+            break
+        fi
+    done < <(get_sync_files "$config_json")
+
+    if [ "$found" = "true" ]; then
+        return
+    fi
+
+    # Search directories
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target_path=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+
+        # Match on name (remove trailing slash for comparison)
+        local clean_name="${name%/}"
+        local clean_target="${target%/}"
+        if [[ "$name" == "$target" ]] || [[ "$clean_name" == "$clean_target" ]] || [[ "$clean_name" == "$target" ]]; then
+            diff -ur "$source" "$target_path" || true
+            found=true
+            break
+        fi
+    done < <(get_sync_directories "$config_json")
+
+    if [ "$found" = "false" ]; then
+        echo -e "${RED}✗${NC} Unknown target: $target"
+        echo "Available targets:"
+        get_sync_files "$config_json" | while IFS= read -r entry; do
+            echo "  - $(extract_field "$entry" "name")"
+        done
+        get_sync_directories "$config_json" | while IFS= read -r entry; do
+            echo "  - $(extract_field "$entry" "name")"
+        done
+        exit 1
+    fi
 }
 
 # ============================================================================
@@ -285,20 +277,38 @@ cmd_diff() {
 
 cmd_deploy() {
     local dry_run="${1:-false}"
+    local config_json=$(parse_sync_config "$CONFIG_FILE" "$REPO_DIR")
 
     echo "═══════════════════════════════════════════════════════════════"
     echo " Deploy: Repo → Live Config"
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
-    # Build list of what differs
+    # Build list of what differs from config
     local affected=()
-    files_differ "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md" && affected+=("CLAUDE.md")
-    files_differ "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json" && affected+=("settings.json")
-    files_differ "$REPO_DIR/claude-config/api_key_helper.sh" "$LIVE_DIR/api_key_helper.sh" && affected+=("api_key_helper.sh")
-    directories_differ "$REPO_DIR/claude-config/agents" "$LIVE_DIR/agents" && affected+=("agents/")
-    directories_differ "$REPO_DIR/claude-config/skills" "$LIVE_DIR/skills" && affected+=("skills/")
-    plugins_differ "$REPO_DIR/claude-config/plugins.txt" && affected+=("plugins")
+
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+        if files_differ "$source" "$target"; then
+            affected+=("file:$source:$target:$name")
+        fi
+    done < <(get_sync_files "$config_json")
+
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+        if directories_differ "$source" "$target"; then
+            affected+=("dir:$source:$target:$name")
+        fi
+    done < <(get_sync_directories "$config_json")
+
+    # Check plugins separately
+    if plugins_differ "$REPO_DIR/claude-config/plugins.txt"; then
+        affected+=("plugins")
+    fi
 
     if [ ${#affected[@]} -eq 0 ]; then
         echo -e "${GREEN}✓ Everything already in sync${NC}"
@@ -314,41 +324,21 @@ cmd_deploy() {
 
     local changes=0
 
-    # Deploy CLAUDE.md
-    if [[ " ${affected[*]} " =~ " CLAUDE.md " ]]; then
-        sync_file "$REPO_DIR/CLAUDE.md" "$LIVE_DIR/CLAUDE.md" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Deploy settings.json
-    if [[ " ${affected[*]} " =~ " settings.json " ]]; then
-        sync_file "$REPO_DIR/claude-config/settings.sync.json" "$LIVE_DIR/settings.json" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Deploy api_key_helper.sh
-    if [[ " ${affected[*]} " =~ " api_key_helper.sh " ]]; then
-        sync_file "$REPO_DIR/claude-config/api_key_helper.sh" "$LIVE_DIR/api_key_helper.sh" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Deploy agents directory
-    if [[ " ${affected[*]} " =~ " agents/ " ]]; then
-        sync_directory "$REPO_DIR/claude-config/agents" "$LIVE_DIR/agents" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Deploy skills directory
-    if [[ " ${affected[*]} " =~ " skills/ " ]]; then
-        sync_directory "$REPO_DIR/claude-config/skills" "$LIVE_DIR/skills" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Deploy plugins
-    if [[ " ${affected[*]} " =~ " plugins " ]]; then
-        deploy_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
-        ((changes++))
-    fi
+    # Process each affected item
+    for item in "${affected[@]}"; do
+        if [[ "$item" == "plugins" ]]; then
+            deploy_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
+            ((changes++))
+        elif [[ "$item" == file:* ]]; then
+            IFS=':' read -r _ source target name <<< "$item"
+            sync_file "$source" "$target" "$BACKUP_DIR" "$dry_run"
+            ((changes++))
+        elif [[ "$item" == dir:* ]]; then
+            IFS=':' read -r _ source target name <<< "$item"
+            sync_directory "$source" "$target" "$BACKUP_DIR" "$dry_run"
+            ((changes++))
+        fi
+    done
 
     if [ "$dry_run" = "false" ]; then
         save_sync_state "deploy"
@@ -370,20 +360,42 @@ cmd_deploy() {
 cmd_pull() {
     local dry_run="${1:-false}"
     local force="${2:-false}"
+    local config_json=$(parse_sync_config "$CONFIG_FILE" "$REPO_DIR")
 
     echo "═══════════════════════════════════════════════════════════════"
     echo " Pull: Live Config → Repo"
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
-    # Build list of what differs
+    # Build list of what differs from config (note: reversed order for pull)
     local affected=()
-    files_differ "$LIVE_DIR/CLAUDE.md" "$REPO_DIR/CLAUDE.md" && affected+=("CLAUDE.md")
-    files_differ "$LIVE_DIR/settings.json" "$REPO_DIR/claude-config/settings.sync.json" && affected+=("settings.json")
-    files_differ "$LIVE_DIR/api_key_helper.sh" "$REPO_DIR/claude-config/api_key_helper.sh" && affected+=("api_key_helper.sh")
-    directories_differ "$LIVE_DIR/agents" "$REPO_DIR/claude-config/agents" && affected+=("agents/")
-    directories_differ "$LIVE_DIR/skills" "$REPO_DIR/claude-config/skills" && affected+=("skills/")
-    plugins_differ "$REPO_DIR/claude-config/plugins.txt" && affected+=("plugins")
+    local affected_names=()
+
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+        if files_differ "$target" "$source"; then
+            affected+=("file:$target:$source:$name")
+            affected_names+=("$name")
+        fi
+    done < <(get_sync_files "$config_json")
+
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+        if directories_differ "$target" "$source"; then
+            affected+=("dir:$target:$source:$name")
+            affected_names+=("$name")
+        fi
+    done < <(get_sync_directories "$config_json")
+
+    # Check plugins separately
+    if plugins_differ "$REPO_DIR/claude-config/plugins.txt"; then
+        affected+=("plugins")
+        affected_names+=("plugins")
+    fi
 
     if [ ${#affected[@]} -eq 0 ]; then
         echo -e "${GREEN}✓ Everything already in sync${NC}"
@@ -397,7 +409,7 @@ cmd_pull() {
         echo ""
     elif [ "$force" = "false" ]; then
         echo -e "${YELLOW}⚠  This will overwrite repo files with live config${NC}"
-        echo "Affected: ${affected[*]}"
+        echo "Affected: ${affected_names[*]}"
         echo ""
         local confirm=""
         read -p "Continue? (yes/no): " -r confirm
@@ -410,41 +422,21 @@ cmd_pull() {
 
     local changes=0
 
-    # Pull CLAUDE.md
-    if [[ " ${affected[*]} " =~ " CLAUDE.md " ]]; then
-        sync_file "$LIVE_DIR/CLAUDE.md" "$REPO_DIR/CLAUDE.md" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Pull settings.json
-    if [[ " ${affected[*]} " =~ " settings.json " ]]; then
-        sync_file "$LIVE_DIR/settings.json" "$REPO_DIR/claude-config/settings.sync.json" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Pull api_key_helper.sh
-    if [[ " ${affected[*]} " =~ " api_key_helper.sh " ]]; then
-        sync_file "$LIVE_DIR/api_key_helper.sh" "$REPO_DIR/claude-config/api_key_helper.sh" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Pull agents directory
-    if [[ " ${affected[*]} " =~ " agents/ " ]]; then
-        sync_directory "$LIVE_DIR/agents" "$REPO_DIR/claude-config/agents" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Pull skills directory
-    if [[ " ${affected[*]} " =~ " skills/ " ]]; then
-        sync_directory "$LIVE_DIR/skills" "$REPO_DIR/claude-config/skills" "$BACKUP_DIR" "$dry_run"
-        ((changes++))
-    fi
-
-    # Pull plugins
-    if [[ " ${affected[*]} " =~ " plugins " ]]; then
-        pull_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
-        ((changes++))
-    fi
+    # Process each affected item
+    for item in "${affected[@]}"; do
+        if [[ "$item" == "plugins" ]]; then
+            pull_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
+            ((changes++))
+        elif [[ "$item" == file:* ]]; then
+            IFS=':' read -r _ source target name <<< "$item"
+            sync_file "$source" "$target" "$BACKUP_DIR" "$dry_run"
+            ((changes++))
+        elif [[ "$item" == dir:* ]]; then
+            IFS=':' read -r _ source target name <<< "$item"
+            sync_directory "$source" "$target" "$BACKUP_DIR" "$dry_run"
+            ((changes++))
+        fi
+    done
 
     if [ "$dry_run" = "false" ]; then
         save_sync_state "pull"

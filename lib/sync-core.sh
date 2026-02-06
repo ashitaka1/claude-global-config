@@ -22,13 +22,12 @@ check_dependencies() {
     command -v rsync &>/dev/null || missing+=(rsync)
     command -v shasum &>/dev/null || missing+=(shasum)
     command -v jq &>/dev/null || missing+=(jq)
+    command -v yq &>/dev/null || missing+=(yq)
     command -v op &>/dev/null || missing+=("op (1Password CLI)")
 
     if [ ${#missing[@]} -gt 0 ]; then
         echo -e "${RED}✗${NC} Missing required dependencies: ${missing[*]}"
-        echo "  Please install them and try again."
-        echo "  On macOS: brew install rsync jq"
-        echo "  1Password CLI: https://developer.1password.com/docs/cli/get-started/"
+        echo "  Please run: ./install.sh"
         exit 1
     fi
 }
@@ -172,6 +171,130 @@ validate_path() {
 
     echo -e "${RED}✗${NC} Invalid path: $path (not in allowed paths)"
     return 1
+}
+
+# ============================================================================
+# Config Parsing Functions
+# ============================================================================
+
+# Expand path helper for config parsing
+expand_config_path() {
+    local path="$1"
+    local repo_dir="$2"
+
+    if [[ "$path" == ~/* ]]; then
+        echo "$HOME/${path#~/}"
+    elif [[ "$path" == /* ]]; then
+        echo "$path"
+    else
+        echo "$repo_dir/$path"
+    fi
+}
+
+# Parse sync config and return JSON
+parse_sync_config() {
+    local config_file="$1"
+    local repo_dir="$2"
+
+    # Convert YAML to JSON using yq
+    local yaml_json=$(yq eval -o=json "$config_file")
+
+    # Process files - expand paths and add names
+    local files_json=$(echo "$yaml_json" | jq -r '.sync.files // []' | jq -c --arg repo_dir "$repo_dir" '
+        map({
+            source: .source,
+            target: .target,
+            name: (.name // (.target | split("/") | last))
+        } | {
+            source: (if .source | startswith("~/") then
+                        ("'"$HOME"'/" + (.source | ltrimstr("~/")))
+                     elif .source | startswith("/") then
+                        .source
+                     else
+                        ($repo_dir + "/" + .source)
+                     end),
+            target: (if .target | startswith("~/") then
+                        ("'"$HOME"'/" + (.target | ltrimstr("~/")))
+                     elif .target | startswith("/") then
+                        .target
+                     else
+                        ($repo_dir + "/" + .target)
+                     end),
+            name: .name
+        })
+    ')
+
+    # Process directories - expand paths and add names
+    local dirs_json=$(echo "$yaml_json" | jq -r '.sync.directories // []' | jq -c --arg repo_dir "$repo_dir" '
+        map({
+            source: .source,
+            target: .target,
+            name: (.name // ((.target | split("/") | last) + "/")),
+            recursive: (.recursive // true)
+        } | {
+            source: (if .source | startswith("~/") then
+                        ("'"$HOME"'/" + (.source | ltrimstr("~/")))
+                     elif .source | startswith("/") then
+                        .source
+                     else
+                        ($repo_dir + "/" + .source)
+                     end),
+            target: (if .target | startswith("~/") then
+                        ("'"$HOME"'/" + (.target | ltrimstr("~/")))
+                     elif .target | startswith("/") then
+                        .target
+                     else
+                        ($repo_dir + "/" + .target)
+                     end),
+            name: .name,
+            recursive: .recursive
+        })
+    ')
+
+    # Process backup config - expand location path
+    local backup_json=$(echo "$yaml_json" | jq -c --arg repo_dir "$repo_dir" '
+        .sync.backup // {} | {
+            enabled: (.enabled // true),
+            location: (if .location then
+                        (if .location | startswith("~/") then
+                            ("'"$HOME"'/" + (.location | ltrimstr("~/")))
+                         elif .location | startswith("/") then
+                            .location
+                         else
+                            ($repo_dir + "/" + .location)
+                         end)
+                       else
+                        "'"$HOME"'/.claude/backups/sync"
+                       end),
+            keep_count: (.keep_count // 10)
+        }
+    ')
+
+    # Build final JSON
+    jq -n \
+        --argjson files "$files_json" \
+        --argjson dirs "$dirs_json" \
+        --argjson backup "$backup_json" \
+        '{files: $files, directories: $dirs, backup_config: $backup}'
+}
+
+# Get sync files as JSON array (one per line)
+get_sync_files() {
+    local config_json="$1"
+    echo "$config_json" | jq -r '.files[] | @json'
+}
+
+# Get sync directories as JSON array (one per line)
+get_sync_directories() {
+    local config_json="$1"
+    echo "$config_json" | jq -r '.directories[] | @json'
+}
+
+# Extract field from JSON entry
+extract_field() {
+    local entry="$1"
+    local field="$2"
+    echo "$entry" | jq -r ".$field"
 }
 
 # ============================================================================
@@ -390,29 +513,27 @@ save_sync_state() {
         existing_pull="$timestamp"
     fi
 
-    # Build checksums object
+    # Build checksums object from config
     local checksums="{}"
+    local config_json=$(parse_sync_config "$SCRIPT_DIR/.sync-config.yaml" "$SCRIPT_DIR")
 
-    # Add checksums for each tracked file/directory
-    if [ -f "CLAUDE.md" ]; then
-        checksums=$(echo "$checksums" | jq --arg v "$(compute_checksum "CLAUDE.md")" '. + {"CLAUDE.md": $v}')
-    fi
+    # Add checksums for each tracked file
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local name=$(extract_field "$entry" "name")
+        if [ -f "$source" ]; then
+            checksums=$(echo "$checksums" | jq --arg k "$name" --arg v "$(compute_checksum "$source")" '. + {($k): $v}')
+        fi
+    done < <(get_sync_files "$config_json")
 
-    if [ -f "claude-config/settings.sync.json" ]; then
-        checksums=$(echo "$checksums" | jq --arg v "$(compute_checksum "claude-config/settings.sync.json")" '. + {"settings.json": $v}')
-    fi
-
-    if [ -f "claude-config/api_key_helper.sh" ]; then
-        checksums=$(echo "$checksums" | jq --arg v "$(compute_checksum "claude-config/api_key_helper.sh")" '. + {"api_key_helper.sh": $v}')
-    fi
-
-    if [ -d "claude-config/agents" ]; then
-        checksums=$(echo "$checksums" | jq --arg v "$(compute_directory_checksum "claude-config/agents")" '. + {"agents": $v}')
-    fi
-
-    if [ -d "claude-config/skills" ]; then
-        checksums=$(echo "$checksums" | jq --arg v "$(compute_directory_checksum "claude-config/skills")" '. + {"skills": $v}')
-    fi
+    # Add checksums for each tracked directory
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local name=$(extract_field "$entry" "name")
+        if [ -d "$source" ]; then
+            checksums=$(echo "$checksums" | jq --arg k "$name" --arg v "$(compute_directory_checksum "$source")" '. + {($k): $v}')
+        fi
+    done < <(get_sync_directories "$config_json")
 
     # Build final JSON with jq
     jq -n \
