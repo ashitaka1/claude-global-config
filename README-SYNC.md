@@ -42,6 +42,7 @@ Configuration is defined in `.sync-config.yaml`.
 ### Directories (bidirectional)
 - `claude-config/agents/*` ↔ `~/.claude/agents/*`
 - `claude-config/skills/*` ↔ `~/.claude/skills/*`
+- `templates/*` ↔ `~/.claude/templates/*`
 
 ### Plugins
 - `claude-config/plugins.txt` tracks installed plugins
