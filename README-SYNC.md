@@ -39,6 +39,8 @@ Configuration is defined in `.sync-config.yaml`.
 - `claude-config/api_key_helper.sh` ↔ `~/.claude/api_key_helper.sh`
 - `claude-config/statusline.sh` ↔ `~/.claude/statusline.sh`
 
+> Files with a `.sync` suffix in the repo (e.g., `settings.sync.json`) are renamed when deployed — the `.sync` is stripped to produce the live filename (`settings.json`).
+
 ### Directories (bidirectional)
 - `claude-config/agents/*` ↔ `~/.claude/agents/*`
 - `claude-config/skills/*` ↔ `~/.claude/skills/*`
