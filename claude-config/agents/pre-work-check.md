@@ -5,6 +5,8 @@ tools: Bash
 model: haiku
 ---
 
+DEPRECATED. DON'T USE FOR NOW.
+
 You verify the development environment is ready before starting feature work.
 
 ## When invoked

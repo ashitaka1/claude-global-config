@@ -10,12 +10,12 @@ Create a new feature branch and immediately enter guided feature development.
 ## Usage
 
 ```
-/start-feature <feature-name>
+/start-feature [fix] <feature-name>
 ```
 
 ## What it does
 
-1. Creates a new git worktree with branch following the project's branch naming conventions (default: `<user>/feature-<name>`) in .worktrees
+1. Creates a new git worktree with branch following the project's branch naming conventions (default: `<user>/feature-<name>` or `<user>/fix-<name>`) in .worktrees
 2. Switches to that branch/tree
 3. Launches `/feature-dev:feature-dev` for guided development
 
@@ -35,7 +35,7 @@ When invoked with `$ARGUMENTS`:
 
    **Check project CLAUDE.md first** for branch naming conventions. If there are none, use this default format:
    - `<user>/feature-<label>` for features
-   - `<user>/fix-<label>` for bug fixes
+   - `<user>/fix-<label>` for bug fixes if the `fix` argument is present
 
    Where `<user>` is the user's github username.
 
@@ -59,4 +59,3 @@ This ensures a seamless workflow: worktree creation → guided development witho
 - Always check project CLAUDE.md for specific branch naming conventions first
 - Worktrees are placed in `.worktrees/` (already in `.gitignore`)
 - The feature-dev workflow will handle planning, architecture, implementation, and testing
-- After merging, clean up with `git worktree remove .worktrees/<dir>` or use `/clean_gone`

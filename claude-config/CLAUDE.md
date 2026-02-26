@@ -35,7 +35,7 @@ NEVER make changes directly on main. Follow the development workflow.
 
 ### Branches
 
-1. ALWAYS use branches for all development. Never commit to main.
+1. NEVER COMMIT TO MAIN.
 2. When developing solo, merge branches directly; when contributing to a repo use PRs.
 3. **Branch naming:** Unless project specifies otherwise, use:
    - `<user>/feature-<feature-label>` for features
@@ -67,11 +67,7 @@ NEVER make changes directly on main. Follow the development workflow.
 
 ### Starting Work
 
-1. **Run `pre-work-check` agent** — verifies feature branch and passing tests
-2. If on main, use `/start-feature <name>` to create a worktree and begin guided development
-3. Never commit directly to main
-
-**Important:** After context compaction, branch state may be lost. Always verify with `pre-work-check` before continuing work.
+Use `/start-feature <name>` to create a worktree and begin guided development
 
 ### Feature Development
 
@@ -81,38 +77,36 @@ Use `/start-feature <name>` to create a worktree with a feature branch and enter
 - Architecture design with trade-off analysis
 - Implementation with quality review
 
+#### Test plan
 **After Architecture Design (before implementation):**
 Create a test plan using the required template:
 
-| Test Name | Category | Custom Logic Tested |
-|-----------|----------|---------------------|
+| Test Name | Category | Justification |
+|-----------|----------|---------------|
 | ... | ... | ... |
 
 **Categories:** Config validation, Constructor validation, State machine, Thread safety, Error handling, Integration, Documentation
 
-**Test Scrutiny Phase 1:** Delegate to `test-scrutinizer` agent for plan review. The agent will:
-- Verify each test names specific custom logic (not SDK/library code)
-- Validate categories are accurate (not just accepted at face value)
-- Save the approved proposal to `.claude/test-proposals/<branch-name>.md` for Phase 2 comparison
+**Justification:** You must think carefully and explain *exactly* how your tests actually test meaningful custom logic, user input, or something else non-trivial.
 
-Tests must name specific custom logic being tested — if you can't, it's likely plumbing.
+**Test Scrutiny Phase 1:** Delegate to `test-scrutinizer` agent for plan review.
+- Pass it your test plan.
+- Work with the test-scrutinizer until it approves your plan.
+- When your plan is approved, save the approved proposal to `.claude/test-proposals/<branch-name>.md` for Phase 2 comparison
+- Ask the user to review your plan, and make any requested modifications.
 
-### Implementation Phase (TDD)
+#### Implementation (TDD)
 
 1. Write tests according to approved plan
 2. Run tests (should fail)
 3. Implement feature
 4. Run tests (should pass)
 5. **Test Scrutiny Phase 2:** Delegate to `test-scrutinizer` agent for implementation review
-   - Agent reads saved proposal from `.claude/test-proposals/<branch-name>.md`
-   - Compares written tests against proposal
-   - Verifies tests actually test what they claimed to test
-   - Checks for proper techniques
 6. **If Phase 2 fails:** Return to step 1 — rewrite tests to match proposal, or revise proposal and re-run Phase 1
 
 ### Feature Validation
 
-Before documenting or committing, verify the feature works in the target environment:
+Before merging to main, verify the feature works in the target environment:
 1. Build the project
 2. Test in the actual runtime environment (not just unit tests)
 3. Verify integration points work as expected
@@ -120,27 +114,12 @@ Before documenting or committing, verify the feature works in the target environ
 
 **Why this matters:** Unit tests verify logic, but validation catches integration issues (configuration problems, dependency resolution, timing issues). Documentation should describe working behavior, not theoretical behavior.
 
-### Committing Changes
-
-When asked to commit:
-
-1. Run tests: `make test`
-2. If tests fail, abort and report
-3. Run documentation agents **in parallel**:
-   - `readme-updater` (if user-facing changes)
-   - `claude-md-updater` (if workflow changes)
-   - `project-spec-updater` (if technical/architectural changes)
-   - `changelog-updater` (if changes affect users/contributors)
-4. Stage doc changes
-5. Execute `git commit`
-
 ### Completing Work
 
-1. **Delegate to `completion-checker` agent** — verify branch is ready to merge
-2. Address any blocking issues
-3. Merge branch to main (solo) or open PR (collaborative)
-4. Clean up the worktree: `git worktree remove .worktrees/<dir>` or use `/clean_gone`
-5. Use `retro-reviewer` agent periodically to review Claude Code usage and suggest improvements
+1. **Delegate to `completion-checker` agent** — handles documentation updates.
+2. Attempt to validate the application in a test environment. Follow any project directives for doing so.
+3. Use /end-feature to finalize the feature branch.
+4. Use /revise-claude-md
 
 ---
 
