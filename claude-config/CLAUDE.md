@@ -56,6 +56,7 @@ NEVER make changes directly on main. Follow the development workflow.
 3. Especially do not reference unused alternative implementation possibilities where you received feedback to do something else.
 4. The audience of the commit log messages are the contributors to the repo.
 5. Do not include a co-author message.
+6. Use `git commit -F - <<'EOF'` to pass multi-line messages. Do not use `$(cat <<'EOF'...)` — the `$()` command substitution triggers unnecessary approval prompts.
 
 ## Documentation Standards
 
@@ -116,7 +117,7 @@ Before merging to main, verify the feature works in the target environment:
 
 ### Completing Work
 
-1. **Delegate to `completion-checker` agent** — handles documentation updates.
+1. **Run `/completion-check`** — runs tests, handles documentation updates, commits.
 2. Attempt to validate the application in a test environment. Follow any project directives for doing so.
 3. Use /end-feature to finalize the feature branch.
 4. Use /revise-claude-md
