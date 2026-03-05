@@ -43,6 +43,10 @@ NEVER make changes directly on main. Follow the development workflow.
 
    Where `<user>` is the user's github username. Projects may specify different formats in their CLAUDE.md.
 
+### Git Commands
+
+- **Avoid targeting git at a different directory.** Both `cd <path> && git ...` and `git -C <path> ...` trigger approval prompts. When working in worktrees or subdirectories, prefer running git commands from within that directory (e.g., agents launched with worktree isolation should use plain `git` since they're already in the worktree).
+
 ### Commits
 
 1. Limit commits to a single feature, change, or fix whenever possible.
