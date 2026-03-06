@@ -42,9 +42,14 @@ When invoked with `$ARGUMENTS`:
 3. Read and understand each issue's content from the fetch output.
 4. If no arguments, ask the user to describe the fixes needed.
 
-### Phase 3: Create Resource Pool and Run Baseline Tests
+### Phase 3: Verify Prerequisites, Create Resource Pool, and Run Baseline Tests
 
-Do both of these in parallel -- resources warm up while the baseline test runs.
+**Prerequisite checks (before anything else):**
+
+1. Verify QA tools are available by running `which` for each CLI tool referenced in the QA Tool Reference config (e.g., `which xcodebuildmcp`). If any are missing, stop and tell the user which tools need to be installed.
+2. Verify QA setup prerequisites exist (e.g., token files, credential files referenced in the QA setup steps). If missing, ask the user to provide them before proceeding.
+
+Then do both of these in parallel -- resources warm up while the baseline test runs.
 
 **Resource pool creation:**
 
@@ -139,7 +144,16 @@ For each agent:
 - Commit conventions (issue-reference template with `$ISSUE` pre-substituted, plus guidelines)
 - Relevant project conventions from CLAUDE.md (accessibility rules, coding conventions, etc.)
 
-**For parallel agents:** Create all worktrees first. Then for each agent, `cd` into its worktree and spawn it sequentially (since `cd` only affects the next Bash call, not parallel Agent calls). Alternatively, spawn agents one at a time but let each run in background.
+**Spawning agents -- CWD is critical:**
+
+Agents inherit the coordinator's CWD at spawn time. This MUST be the worktree directory. Follow this exact sequence for EACH agent, one step per tool call:
+
+1. Bash: `cd /path/to/worktree`
+2. Bash: `git branch --show-current` -- confirm it matches the expected branch. If not, stop and debug.
+3. Agent call with `run_in_background: true` -- spawn the agent.
+4. Wait for this spawn to return before starting the next agent's sequence.
+
+**NEVER spawn multiple agents in a single message.** Each agent must be spawned in its own message, immediately after its cd+verify step. Interruptions between cd and spawn (user messages, other tool calls) can cause the CWD to become stale.
 
 **Do not duplicate the agents' work.** The coordinator waits for all agents to return.
 
@@ -186,7 +200,15 @@ Resources cleaned up: N/N
 - [agent/branch]: [observation]
 ```
 
-5. For successful branches, suggest next steps (push, PR, merge).
+5. If agents reported platform or framework discoveries (undocumented behaviors, workarounds, gotchas), compile them and suggest additions to the QA tactics doc:
+
+```
+## Platform/Framework Discoveries (from agents)
+- [agent/branch]: [discovery and workaround]
+  → Suggested qa-tactics addition: [brief tactic]
+```
+
+6. For successful branches, suggest next steps (push, PR, merge).
 
 ## Error Handling
 

@@ -40,6 +40,8 @@ git branch --show-current
 
 This should match your `branch_name`. If not, stop and report the mismatch.
 
+Verify QA tools are available. For each CLI tool referenced in your `qa_tool_reference` (e.g., `xcodebuildmcp`), run `which <tool>`. Check all tools, then if any are missing, report the full list of missing tools and stop -- do not proceed with implementation. The coordinator must fix the environment first.
+
 ### Step 2: Explore
 
 The coordinator gave you a fix plan, but verify it against the actual code:
@@ -146,6 +148,11 @@ that were OUT OF SCOPE but worth reporting to the coordinator:
 Inefficiencies, missing tactics, or friction encountered during QA execution.
 These help improve the qa-tactics doc and testing infrastructure for future runs:
 - [observation] -- [what was slow, what workaround you used, what would have helped]
+
+### Platform/Framework Discoveries
+Undocumented behaviors, workarounds, or gotchas discovered during implementation
+or QA. These help improve the qa-tactics doc and project knowledge base:
+- [discovery]: [what you expected vs what happened] -- [workaround used]
 
 ### Notes
 - [Anything unexpected, deviations from plan, other observations]
