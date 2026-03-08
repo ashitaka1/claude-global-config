@@ -112,6 +112,15 @@
             "command": "if [ \"$(git branch --show-current 2>/dev/null)\" = \"main\" ]; then echo 'BLOCKED: You tried to work on main. Use proper development protocol.' && exit 2; fi"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/scripts/no-git-cd-chain.py"
+          }
+        ]
       }
     ]
   },
