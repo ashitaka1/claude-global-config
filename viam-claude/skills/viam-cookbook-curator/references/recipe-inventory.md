@@ -42,3 +42,9 @@ Each entry lists:
 |--------|------|-------------|--------|
 | Accessing the Frame System | `references/frame-system/accessing-frame-system.md` | `framesystem.FromDependencies`, `FrameSystemConfig`, `GetPose`, `TransformPose` | Retrieving frame system service, getting component poses in different frames, building a FrameSystem object |
 | Building a Subset Frame System | `references/frame-system/building-subset.md` | `FrameSystemParts`, supplemental transforms, collision filtering | Filtering components for reduced frame systems, adding tool transforms, performance benefits |
+
+## Third-Party Components
+
+| Recipe | File | Key concepts | Covers |
+|--------|------|-------------|--------|
+| Arm Position Saver (Switch API) | `references/third-party-components/arm-position-saver.md` | `erh:vmodutils:arm-position-saver`, `rdk:component:switch`, `SetPosition`, `GetPosition`, destructive save | Using Switch API for arm pose save/recall; SetPosition(1) destructively overwrites config; SetPosition(2) moves to saved pose; motion attribute for direct vs. planned moves |

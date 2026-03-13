@@ -51,6 +51,11 @@ Consult the index below whenever you need to:
 | Accessing the Frame System | `references/frame-system/accessing-frame-system.md` | framesystem.FromDependencies, FrameSystemConfig, NewFrameSystem |
 | Building a Subset Frame System | `references/frame-system/building-subset.md` | Filtering FrameSystemParts for armplanning with reduced collision checking |
 
+### Third-Party Components
+| Recipe | File | What it covers |
+|--------|------|----------------|
+| Arm Position Saver (Switch API) | `references/third-party-components/arm-position-saver.md` | erh:vmodutils:arm-position-saver — save/recall arm poses via Switch API; destructive SetPosition(1) gotcha |
+
 ## How to use
 
 1. Find the relevant recipe in the index above
