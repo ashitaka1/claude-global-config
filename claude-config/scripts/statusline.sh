@@ -31,14 +31,28 @@ cwd=$(echo "$input" | jq -r '.cwd // .workspace.current_dir // empty')
 transcript_path=$(echo "$input" | jq -r '.transcript_path // empty')
 max_context=$(echo "$input" | jq -r '.context_window.context_window_size // 200000')
 max_k=$((max_context / 1000))
+worktree_name=$(echo "$input" | jq -r '.worktree.name // empty')
+project_dir=$(echo "$input" | jq -r '.workspace.project_dir // empty')
 
 # --- Directory display (last 3 components with ~/ prefix) ---
-cwd_tilde="${cwd/#$HOME/~}"
-dir_display=$(echo "$cwd_tilde" | awk -F'/' '{
-  n=NF
-  if(n<=3) print $0
-  else printf ".../%s/%s/%s",$(n-2),$(n-1),$n
-}')
+# When in a worktree, derive the real project name from the .git pointer
+# (.git file contains "gitdir: /path/to/RealProject/.git/worktrees/slug")
+if [[ -n "$worktree_name" && -n "$cwd" && -f "$cwd/.git" ]]; then
+    gitdir_line=$(head -1 "$cwd/.git")
+    # Strip "gitdir: " prefix, then extract repo name from .git/worktrees path
+    project_name=$(echo "${gitdir_line#gitdir: }" | sed 's|/\.git/worktrees/.*||' | xargs basename)
+    dir_display="${project_name}/worktrees/${worktree_name}"
+elif [[ -n "$worktree_name" && -n "$project_dir" ]]; then
+    project_name=$(basename "$project_dir")
+    dir_display="${project_name}/worktrees/${worktree_name}"
+else
+    cwd_tilde="${cwd/#$HOME/~}"
+    dir_display=$(echo "$cwd_tilde" | awk -F'/' '{
+      n=NF
+      if(n<=3) print $0
+      else printf ".../%s/%s/%s",$(n-2),$(n-1),$n
+    }')
+fi
 
 # --- Git section ---
 branch=""

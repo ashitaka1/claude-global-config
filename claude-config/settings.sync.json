@@ -101,7 +101,6 @@
       "Bash(xcrun:*)"
     ]
   },
-  "model": "opus",
   "hooks": {
     "PreToolUse": [
       {
