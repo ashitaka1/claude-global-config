@@ -24,7 +24,7 @@ def check_command(command: str) -> str | None:
     if re.search(r'\bcd\s+\S+.*&&\s*git\b', command):
         return (
             "Blocked: do not chain `cd <dir> && git ...`. "
-            "Use the `cwd` parameter of the Bash tool to set the working directory instead."
+            "For worktree git operations, use: bash ~/.claude/scripts/worktree-git.sh <worktree-path> <git-args>"
         )
 
     # Pattern 2: git -C <dir> ...
@@ -34,7 +34,7 @@ def check_command(command: str) -> str | None:
     if re.search(r'\bgit\s+-C\b', command):
         return (
             "Blocked: do not use `git -C <dir>`. "
-            "Use the `cwd` parameter of the Bash tool to set the working directory instead."
+            "For worktree git operations, use: bash ~/.claude/scripts/worktree-git.sh <worktree-path> <git-args>"
         )
 
     return None

@@ -97,8 +97,10 @@
       "Bash(./sync.sh:*)",
       "Skill(*)",
       "Read(//var/folders/**)",
+      "Read(~/.claude/skills/shared/**)",
       "Bash(xcodebuildmcp:*)",
-      "Bash(xcrun:*)"
+      "Bash(xcrun:*)",
+      "Bash(~/.claude/scripts/worktree-git.sh:*)"
     ]
   },
   "hooks": {
@@ -108,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ \"$(git branch --show-current 2>/dev/null)\" = \"main\" ]; then echo 'BLOCKED: You tried to work on main. Use proper development protocol.' && exit 2; fi"
+            "command": "python3 $HOME/.claude/scripts/no-edit-main.py"
           }
         ]
       },
