@@ -100,7 +100,8 @@
       "Read(~/.claude/skills/shared/**)",
       "Bash(xcodebuildmcp:*)",
       "Bash(xcrun:*)",
-      "Bash(~/.claude/scripts/worktree-git.sh:*)"
+      "Bash(~/.claude/scripts/worktree-git.sh:*)",
+      "Bash(viam *:*)"
     ]
   },
   "hooks": {
