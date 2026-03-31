@@ -31,6 +31,8 @@ Consult the index below whenever you need to:
 |--------|------|----------------|
 | Generic Service Module | `references/module-development/generic-service.md` | Full module pattern: Config, Validate, constructor, DoCommand routing, Close |
 | Dependency Resolution | `references/module-development/dependency-resolution.md` | FromProvider, FromDependencies, declaring deps in Validate, implicit vs explicit deps |
+| Registry Deployment | `references/module-development/registry-deployment.md` | viam module generate, meta.json reference, **post-generation fixups** (url, description, models), local-only to registry migration, cloud build |
+| Local Reload (Cross-Architecture) | `references/module-development/local-reload.md` | Hot-reloading modules from macOS to Linux: build on target, `--no-build` flag, avoiding Makefile cross-compilation traps |
 
 ### Motion
 | Recipe | File | What it covers |

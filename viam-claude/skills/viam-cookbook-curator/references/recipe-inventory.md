@@ -20,6 +20,8 @@ Each entry lists:
 |--------|------|-------------|--------|
 | Generic Service Module | `references/module-development/generic-service.md` | `resource.RegisterService`, `generic.API`, `resource.NativeConfig`, `AlwaysRebuild`, `DoCommand` | Full module lifecycle: model registration, Config struct with JSON tags, Validate returning deps, constructor split (registered + exported), DoCommand key-based routing, Close with cancel |
 | Dependency Resolution | `references/module-development/dependency-resolution.md` | `arm.FromProvider`, `framesystem.FromDependencies`, `resource.FromDependencies`, `Config.Validate` | Declaring deps in Validate, resolving typed resources from Dependencies map, implicit deps (motion service, frame system), component vs. service vs. generic helpers |
+| Registry Deployment | `references/module-development/registry-deployment.md` | `viam module generate`, `--register`, `viam module create`, `viam module update`, `meta.json`, `models`, `build.arch`, `url`, `description`, `markdown_link` | Creating modules (registered or local-only), `--register` flag for one-step registration, meta.json field reference, **post-generation fixups** (url, description, markdown_link, models, build.arch defaults), models vs module_id, migrating local-only to registry, cloud build workflow |
+| Local Reload (Cross-Architecture) | `references/module-development/local-reload.md` | `reload-local`, `--no-build`, `VIAM_BUILD_OS`, `VIAM_BUILD_ARCH`, CGO cross-compilation | Hot-reloading modules from macOS to Linux when CGO deps prevent cross-compilation, build-on-target workflow, `--no-build` flag to skip local build and upload existing tarball |
 
 ## Motion
 
