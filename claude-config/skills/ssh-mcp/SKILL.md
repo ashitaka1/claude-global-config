@@ -34,7 +34,7 @@ claude mcp add \
   -- npx -y ssh-mcp -- \
   --host=<host> \
   --user=<user> \
-  --key=~/.ssh/id_tcos_hosts \
+  --key=$HOME/.ssh/id_tcos_hosts \
   --sudoPassword=checkmate \
   --maxChars=none
 ```
