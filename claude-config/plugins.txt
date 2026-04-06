@@ -11,5 +11,6 @@ github@claude-plugins-official
 gopls-lsp@claude-plugins-official
 learning-output-style@claude-plugins-official
 playwright@claude-plugins-official
+pyright-lsp@claude-plugins-official
 skill-creator@claude-plugins-official
 swift-lsp@claude-plugins-official
