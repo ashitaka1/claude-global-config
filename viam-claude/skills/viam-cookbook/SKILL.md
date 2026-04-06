@@ -1,13 +1,14 @@
 ---
 name: viam-cookbook
 description: >
-  Practical reference for building Viam modules and applications in Go.
+  Practical reference for building Viam modules, applications, and fleet tooling.
   Contains tested recipes with real code for module development, motion planning,
-  spatial math, and frame systems. Use this skill whenever working on Viam Go SDK
-  code — especially for modules, arm motion, pose computation, DoCommand patterns,
-  dependency resolution, or armplanning. Even if the user doesn't mention "cookbook"
-  or "recipe," consult this when you're about to write Viam Go code so you use the
-  correct SDK patterns rather than guessing from docs.
+  spatial math, frame systems, and fleet management. Use this skill whenever working
+  on Viam SDK code — especially for modules, arm motion, pose computation, DoCommand
+  patterns, dependency resolution, armplanning, or programmatic machine provisioning.
+  Even if the user doesn't mention "cookbook" or "recipe," consult this when you're
+  about to write Viam code so you use the correct SDK patterns rather than guessing
+  from docs.
 ---
 
 # Viam Cookbook
@@ -23,6 +24,7 @@ Consult the index below whenever you need to:
 - Work with poses, orientations, or frames
 - Resolve dependencies in a module
 - Use armplanning.PlanMotion for plan-then-execute workflows
+- Provision machines programmatically (create, retrieve credentials, deploy)
 
 ## Recipe Index
 
@@ -58,6 +60,12 @@ Consult the index below whenever you need to:
 |--------|------|----------------|
 | Arm Position Saver (Switch API) | `references/third-party-components/arm-position-saver.md` | erh:vmodutils:arm-position-saver — save/recall arm poses via Switch API; destructive SetPosition(1) gotcha |
 
+### Fleet Management
+| Recipe | File | What it covers |
+|--------|------|----------------|
+| API Keys vs Cloud Credentials | `references/fleet-management/credential-model.md` | Two credential types, how they relate, viam.json format, provisioning key pattern |
+| Programmatic Machine Provisioning | `references/fleet-management/programmatic-provisioning.md` | CLI + SDK flow for creating machines and retrieving deployable credentials (Python and Go) |
+
 ## How to use
 
 1. Find the relevant recipe in the index above
@@ -66,6 +74,6 @@ Consult the index below whenever you need to:
 
 Each recipe contains:
 - A brief explanation of when and why to use the pattern
-- Complete, working Go code from real modules
+- Complete, working code from real projects (Go and Python)
 - Key imports needed
 - Common pitfalls to avoid

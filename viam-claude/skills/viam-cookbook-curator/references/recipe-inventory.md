@@ -50,3 +50,10 @@ Each entry lists:
 | Recipe | File | Key concepts | Covers |
 |--------|------|-------------|--------|
 | Arm Position Saver (Switch API) | `references/third-party-components/arm-position-saver.md` | `erh:vmodutils:arm-position-saver`, `rdk:component:switch`, `SetPosition`, `GetPosition`, destructive save | Using Switch API for arm pose save/recall; SetPosition(1) destructively overwrites config; SetPosition(2) moves to saved pose; motion attribute for direct vs. planned moves |
+
+## Fleet Management
+
+| Recipe | File | Key concepts | Covers |
+|--------|------|-------------|--------|
+| API Keys vs Cloud Credentials | `references/fleet-management/credential-model.md` | API key, cloud credentials, `viam.json`, part secret, provisioning key, `/etc/viam.json` | Two credential types (API keys for auth, cloud credentials for machine identity), how they relate, viam.json format, provisioning key pattern, curl fetch pattern |
+| Programmatic Machine Provisioning | `references/fleet-management/programmatic-provisioning.md` | `GetRobotPart`, `get_robot_part`, `ViamClient`, `DialOptions`, `Credentials`, `app.NewAppClient`, `viam machines create`, `viam machines part list` | CLI + SDK flow for batch machine creation, retrieving cloud credentials via Python or Go SDK, CLI output parsing, auth patterns for both SDKs |
