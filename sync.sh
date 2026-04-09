@@ -45,29 +45,35 @@ USAGE:
   ./sync.sh <command> [options]
 
 COMMANDS:
+  reconcile [options]          Bidirectional sync with conflict resolution
   deploy [--dry-run]           Deploy repo → live config (overwrite)
   pull [--dry-run] [--force]   Pull live → repo (overwrite)
-  status               Show sync status and differences
-  diff [file]          Show detailed diff for file(s)
-  help                 Show this help message
+  status                       Show sync status and differences
+  diff [file]                  Show detailed diff for file(s)
+  help                         Show this help message
 
-OPTIONS:
+RECONCILE OPTIONS:
+  --dry-run            Preview what would change
+  --repo-wins          Auto-resolve all conflicts using repo version
+  --live-wins          Auto-resolve all conflicts using live version
+
+OTHER OPTIONS:
   --dry-run            Preview changes without modifying files
   --force              Skip confirmation prompts (for scripted use)
 
 WORKFLOW:
   1. Experiment in live config (~/.claude/)
   2. Check status:     ./sync.sh status
-  3. Review changes:   ./sync.sh diff
-  4. Pull to repo:     ./sync.sh pull
-  5. Commit changes:   git add -A && git commit
-  6. Deploy elsewhere: git pull && ./sync.sh deploy
+  3. Reconcile:        ./sync.sh reconcile
+  4. Commit changes:   git add -A && git commit
+  5. Push to remote:   git push
 
 EXAMPLES:
+  ./sync.sh reconcile              # Interactive bidirectional sync
+  ./sync.sh reconcile --dry-run    # Preview reconcile actions
+  ./sync.sh reconcile --repo-wins  # Take repo version for all conflicts
   ./sync.sh status                 # Check what's different
   ./sync.sh diff CLAUDE.md         # Show diff for specific file
-  ./sync.sh pull --dry-run         # Preview pull operation
-  ./sync.sh deploy                 # Deploy repo to live config
 
 ═══════════════════════════════════════════════════════════════
 EOF
@@ -453,6 +459,180 @@ cmd_pull() {
 }
 
 # ============================================================================
+# Reconcile Command (Bidirectional)
+# ============================================================================
+
+cmd_reconcile() {
+    local dry_run="${1:-false}"
+    local conflict_strategy="${2:-ask}"  # ask, repo-wins, live-wins
+
+    local config_json=$(parse_sync_config "$CONFIG_FILE" "$REPO_DIR")
+
+    echo "═══════════════════════════════════════════════════════════════"
+    echo " Reconcile: Bidirectional Sync"
+    echo "═══════════════════════════════════════════════════════════════"
+    echo ""
+    echo "Last reconcile: $(load_sync_state "last_reconcile")"
+    echo ""
+
+    if [ "$dry_run" = "true" ]; then
+        echo -e "${BLUE}DRY-RUN MODE: No files will be modified${NC}"
+        echo ""
+    fi
+
+    local auto_repo=0
+    local auto_live=0
+    local conflicts=0
+    local skipped=0
+    local resolved=0
+    local deletions=0
+
+    # Process every tracked file individually
+    while IFS='|' read -r repo_path live_path checksum_key; do
+        [ -z "$repo_path" ] && continue
+
+        local base=$(get_base_checksum "$STATE_FILE" "$checksum_key")
+        local status=$(classify_file "$repo_path" "$live_path" "$base")
+
+        case "$status" in
+            in-sync)
+                continue
+                ;;
+
+            repo-changed|new-repo)
+                echo -e "  ${GREEN}→${NC} $checksum_key  (repo → live)"
+                sync_single_file "$repo_path" "$live_path" "$BACKUP_DIR" "$dry_run"
+                ((auto_repo++))
+                ;;
+
+            live-changed|new-live)
+                echo -e "  ${GREEN}←${NC} $checksum_key  (live → repo)"
+                sync_single_file "$live_path" "$repo_path" "$BACKUP_DIR" "$dry_run"
+                ((auto_live++))
+                ;;
+
+            deleted-repo)
+                echo -e "  ${RED}×${NC} $checksum_key  (deleted in repo → delete live)"
+                delete_synced_file "$live_path" "$dry_run"
+                ((deletions++))
+                ;;
+
+            deleted-live)
+                echo -e "  ${RED}×${NC} $checksum_key  (deleted in live → delete repo)"
+                delete_synced_file "$repo_path" "$dry_run"
+                ((deletions++))
+                ;;
+
+            both-changed)
+                ((conflicts++))
+                if [ "$dry_run" = "true" ]; then
+                    echo -e "  ${YELLOW}!${NC} $checksum_key  (CONFLICT — both changed)"
+                    continue
+                fi
+
+                local resolution
+                case "$conflict_strategy" in
+                    repo-wins)
+                        echo -e "  ${YELLOW}!${NC} $checksum_key  (conflict → repo wins)"
+                        resolution="repo"
+                        ;;
+                    live-wins)
+                        echo -e "  ${YELLOW}!${NC} $checksum_key  (conflict → live wins)"
+                        resolution="live"
+                        ;;
+                    ask)
+                        resolution=$(resolve_conflict "$checksum_key" "$repo_path" "$live_path")
+                        ;;
+                esac
+
+                case "$resolution" in
+                    repo)
+                        if [ -f "$repo_path" ]; then
+                            sync_single_file "$repo_path" "$live_path" "$BACKUP_DIR" "false"
+                        else
+                            delete_synced_file "$live_path" "false"
+                        fi
+                        ((resolved++))
+                        ;;
+                    live)
+                        if [ -f "$live_path" ]; then
+                            sync_single_file "$live_path" "$repo_path" "$BACKUP_DIR" "false"
+                        else
+                            delete_synced_file "$repo_path" "false"
+                        fi
+                        ((resolved++))
+                        ;;
+                    skip)
+                        ((skipped++))
+                        ;;
+                esac
+                ;;
+        esac
+    done < <(enumerate_tracked_files "$config_json")
+
+    # Reconcile plugins
+    local plugins_file="$REPO_DIR/claude-config/plugins.txt"
+    if [ -f "$plugins_file" ] && plugins_differ "$plugins_file"; then
+        echo ""
+        echo -e "  ${YELLOW}⚠${NC} Plugins differ"
+        if [ "$dry_run" = "true" ]; then
+            echo -e "  ${BLUE}[DRY-RUN]${NC} Would reconcile plugins"
+        else
+            echo "  Repo plugins:"
+            get_repo_plugins "$plugins_file" | sed 's/^/    /'
+            echo "  Live plugins:"
+            get_installed_plugins | sed 's/^/    /'
+            echo ""
+            local plugin_choice=""
+            if [ "$conflict_strategy" = "repo-wins" ]; then
+                plugin_choice="r"
+            elif [ "$conflict_strategy" = "live-wins" ]; then
+                plugin_choice="l"
+            else
+                read -p "  Plugins: (r)epo → live / (l)ive → repo / (s)kip? " -r plugin_choice
+            fi
+            case "$plugin_choice" in
+                r|repo)
+                    deploy_plugins "$plugins_file" "false"
+                    ;;
+                l|live)
+                    pull_plugins "$plugins_file" "false"
+                    ;;
+                *)
+                    echo "  Skipped plugins"
+                    ((skipped++))
+                    ;;
+            esac
+        fi
+    fi
+
+    # Summary
+    echo ""
+    echo "───────────────────────────────────────────────────────────────"
+    echo "SUMMARY"
+    echo "───────────────────────────────────────────────────────────────"
+    echo ""
+
+    local total=$((auto_repo + auto_live + resolved + deletions))
+    if [ $total -eq 0 ] && [ $conflicts -eq 0 ]; then
+        echo -e "${GREEN}Already in sync. Nothing to do.${NC}"
+    else
+        [ $auto_repo -gt 0 ] && echo -e "  ${GREEN}→${NC} $auto_repo file(s) repo → live"
+        [ $auto_live -gt 0 ] && echo -e "  ${GREEN}←${NC} $auto_live file(s) live → repo"
+        [ $deletions -gt 0 ] && echo -e "  ${RED}×${NC} $deletions file(s) deleted"
+        [ $resolved -gt 0 ] && echo -e "  ${YELLOW}!${NC} $resolved conflict(s) resolved"
+        [ $skipped -gt 0 ] && echo -e "  ${BLUE}○${NC} $skipped item(s) skipped"
+    fi
+
+    if [ "$dry_run" = "false" ] && [ $total -gt 0 ]; then
+        save_sync_state "reconcile"
+    fi
+
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════"
+}
+
+# ============================================================================
 # Main Command Dispatcher
 # ============================================================================
 
@@ -466,6 +646,23 @@ main() {
     shift
 
     case "$command" in
+        reconcile)
+            local dry_run=false
+            local strategy="ask"
+            for arg in "$@"; do
+                case "$arg" in
+                    --dry-run) dry_run=true ;;
+                    --repo-wins) strategy="repo-wins" ;;
+                    --live-wins) strategy="live-wins" ;;
+                    *)
+                        echo -e "${RED}✗${NC} Unknown option: $arg"
+                        echo "Usage: ./sync.sh reconcile [--dry-run] [--repo-wins|--live-wins]"
+                        exit 1
+                        ;;
+                esac
+            done
+            cmd_reconcile "$dry_run" "$strategy"
+            ;;
         deploy)
             local dry_run=false
             for arg in "$@"; do

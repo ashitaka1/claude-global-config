@@ -495,25 +495,26 @@ format_diverged_files() {
 save_sync_state() {
     local state_file=".sync-state.json"
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local operation="$1"  # "deploy" or "pull"
+    local operation="$1"  # "deploy", "pull", or "reconcile"
 
-    # Load existing state to preserve both timestamps
+    # Load existing state to preserve timestamps
     local existing_deploy="null"
     local existing_pull="null"
+    local existing_reconcile="null"
 
     if [ -f "$state_file" ]; then
         existing_deploy=$(jq -r '.last_deploy // "null"' "$state_file" 2>/dev/null || echo "null")
         existing_pull=$(jq -r '.last_pull // "null"' "$state_file" 2>/dev/null || echo "null")
+        existing_reconcile=$(jq -r '.last_reconcile // "null"' "$state_file" 2>/dev/null || echo "null")
     fi
 
-    # Update the appropriate timestamp
-    if [ "$operation" = "deploy" ]; then
-        existing_deploy="$timestamp"
-    else
-        existing_pull="$timestamp"
-    fi
+    case "$operation" in
+        deploy)    existing_deploy="$timestamp" ;;
+        pull)      existing_pull="$timestamp" ;;
+        reconcile) existing_reconcile="$timestamp" ;;
+    esac
 
-    # Build checksums object from config
+    # Build per-file checksums from config
     local checksums="{}"
     local config_json=$(parse_sync_config "$SCRIPT_DIR/.sync-config.yaml" "$SCRIPT_DIR")
 
@@ -526,21 +527,27 @@ save_sync_state() {
         fi
     done < <(get_sync_files "$config_json")
 
-    # Add checksums for each tracked directory
+    # Add per-file checksums for each tracked directory
     while IFS= read -r entry; do
         local source=$(extract_field "$entry" "source")
         local name=$(extract_field "$entry" "name")
         if [ -d "$source" ]; then
-            checksums=$(echo "$checksums" | jq --arg k "$name" --arg v "$(compute_directory_checksum "$source")" '. + {($k): $v}')
+            # Store individual file checksums with dir_name/relative_path keys
+            local dir_name="${name%/}"
+            while IFS= read -r rel_path; do
+                local file_key="${dir_name}/${rel_path}"
+                local file_checksum=$(compute_checksum "$source/$rel_path")
+                checksums=$(echo "$checksums" | jq --arg k "$file_key" --arg v "$file_checksum" '. + {($k): $v}')
+            done < <(cd "$source" && find . -type f | sed 's|^\./||' | sort)
         fi
     done < <(get_sync_directories "$config_json")
 
-    # Build final JSON with jq
     jq -n \
         --arg deploy "$existing_deploy" \
         --arg pull "$existing_pull" \
+        --arg reconcile "$existing_reconcile" \
         --argjson checksums "$checksums" \
-        '{last_deploy: $deploy, last_pull: $pull, checksums: $checksums}' > "$state_file"
+        '{last_deploy: $deploy, last_pull: $pull, last_reconcile: $reconcile, checksums: $checksums}' > "$state_file"
 }
 
 load_sync_state() {
@@ -710,4 +717,241 @@ EOF
 
     echo "$installed" >> "$plugins_file"
     echo -e "${GREEN}✓${NC} Updated $plugins_file with installed plugins"
+}
+
+# ============================================================================
+# Reconcile Functions
+# ============================================================================
+
+# Look up a file's base checksum from the last sync state
+get_base_checksum() {
+    local state_file="$1"
+    local key="$2"
+
+    if [ ! -f "$state_file" ]; then
+        echo "NONE"
+        return
+    fi
+
+    local value
+    value=$(jq -r --arg k "$key" '.checksums[$k] // "NONE"' "$state_file" 2>/dev/null)
+    echo "$value"
+}
+
+# Enumerate all tracked files (both standalone and within directories)
+# Outputs lines of: repo_path|live_path|checksum_key
+enumerate_tracked_files() {
+    local config_json="$1"
+
+    # Standalone files
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+        echo "${source}|${target}|${name}"
+    done < <(get_sync_files "$config_json")
+
+    # Individual files within tracked directories
+    while IFS= read -r entry; do
+        local source=$(extract_field "$entry" "source")
+        local target=$(extract_field "$entry" "target")
+        local name=$(extract_field "$entry" "name")
+        local dir_name="${name%/}"
+
+        # Collect all files from both sides to catch additions/deletions
+        local all_files
+        all_files=$(
+            (cd "$source" 2>/dev/null && find . -type f | sed 's|^\./||'
+             cd "$target" 2>/dev/null && find . -type f | sed 's|^\./||') | sort -u
+        )
+
+        while IFS= read -r rel_path; do
+            [ -z "$rel_path" ] && continue
+            echo "${source}/${rel_path}|${target}/${rel_path}|${dir_name}/${rel_path}"
+        done <<< "$all_files"
+    done < <(get_sync_directories "$config_json")
+}
+
+# Classify a file's sync state by comparing three checksums (base, repo, live)
+# Outputs one of: in-sync, repo-changed, live-changed, both-changed, new-repo, new-live, deleted-repo, deleted-live
+classify_file() {
+    local repo_path="$1"
+    local live_path="$2"
+    local base_checksum="$3"
+
+    local repo_checksum=$(compute_checksum "$repo_path")
+    local live_checksum=$(compute_checksum "$live_path")
+
+    # Both missing
+    if [ "$repo_checksum" = "MISSING" ] && [ "$live_checksum" = "MISSING" ]; then
+        echo "in-sync"
+        return
+    fi
+
+    # Both identical
+    if [ "$repo_checksum" = "$live_checksum" ]; then
+        echo "in-sync"
+        return
+    fi
+
+    # No base (first sync or new file)
+    if [ "$base_checksum" = "NONE" ]; then
+        if [ "$repo_checksum" = "MISSING" ]; then
+            echo "new-live"
+        elif [ "$live_checksum" = "MISSING" ]; then
+            echo "new-repo"
+        else
+            echo "both-changed"
+        fi
+        return
+    fi
+
+    # File deleted on one side
+    if [ "$repo_checksum" = "MISSING" ]; then
+        if [ "$live_checksum" = "$base_checksum" ]; then
+            echo "deleted-repo"
+        else
+            echo "both-changed"
+        fi
+        return
+    fi
+    if [ "$live_checksum" = "MISSING" ]; then
+        if [ "$repo_checksum" = "$base_checksum" ]; then
+            echo "deleted-live"
+        else
+            echo "both-changed"
+        fi
+        return
+    fi
+
+    # Both exist, both differ from each other — check against base
+    local repo_changed=false
+    local live_changed=false
+    [ "$repo_checksum" != "$base_checksum" ] && repo_changed=true
+    [ "$live_checksum" != "$base_checksum" ] && live_changed=true
+
+    if [ "$repo_changed" = true ] && [ "$live_changed" = true ]; then
+        echo "both-changed"
+    elif [ "$repo_changed" = true ]; then
+        echo "repo-changed"
+    elif [ "$live_changed" = true ]; then
+        echo "live-changed"
+    else
+        echo "in-sync"
+    fi
+}
+
+# Prompt user to resolve a conflict
+# Returns: "repo", "live", "skip"
+resolve_conflict() {
+    local key="$1"
+    local repo_path="$2"
+    local live_path="$3"
+
+    echo ""
+    echo -e "  ${YELLOW}CONFLICT${NC}  $key"
+    echo "  Both repo and live changed since last sync."
+    echo ""
+
+    # Show compact diff
+    if [ -f "$repo_path" ] && [ -f "$live_path" ]; then
+        diff -u --label "repo" "$repo_path" --label "live" "$live_path" | head -30 || true
+        local diff_lines
+        diff_lines=$(diff -u "$repo_path" "$live_path" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$diff_lines" -gt 30 ]; then
+            echo "  ... ($((diff_lines - 30)) more lines, use (d)iff to see all)"
+        fi
+    elif [ -f "$repo_path" ]; then
+        echo "  Live file is missing (deleted or new in repo only)"
+    elif [ -f "$live_path" ]; then
+        echo "  Repo file is missing (deleted or new in live only)"
+    fi
+
+    echo ""
+    while true; do
+        local choice=""
+        read -p "  Resolution for $key — (r)epo / (l)ive / (d)iff / (e)dit / (s)kip? " -r choice
+        case "$choice" in
+            r|repo)
+                echo "repo"
+                return
+                ;;
+            l|live)
+                echo "live"
+                return
+                ;;
+            d|diff)
+                echo ""
+                if [ -f "$repo_path" ] && [ -f "$live_path" ]; then
+                    diff -u --label "repo" "$repo_path" --label "live" "$live_path" || true
+                fi
+                echo ""
+                ;;
+            e|edit)
+                local target="$live_path"
+                if [ ! -f "$target" ]; then
+                    target="$repo_path"
+                fi
+                local editor="${EDITOR:-vim}"
+                echo "  Opening $target in $editor..."
+                "$editor" "$target"
+                echo "  Saved. Using edited file as resolution."
+                # Edited live file becomes the source of truth — copy to repo
+                if [ "$target" = "$live_path" ]; then
+                    echo "live"
+                else
+                    echo "repo"
+                fi
+                return
+                ;;
+            s|skip)
+                echo "skip"
+                return
+                ;;
+            *)
+                echo "  Please enter r, l, d, e, or s"
+                ;;
+        esac
+    done
+}
+
+# Copy a single file from source to dest, creating parent dirs as needed
+sync_single_file() {
+    local source="$1"
+    local dest="$2"
+    local backup_dir="${3:-}"
+    local dry_run="${4:-false}"
+
+    if [ "$dry_run" = "true" ]; then
+        echo -e "  ${BLUE}[DRY-RUN]${NC} $source → $dest"
+        return
+    fi
+
+    # Backup dest if it exists
+    if [ -n "$backup_dir" ] && [ -f "$dest" ]; then
+        backup_file "$dest" "$backup_dir"
+    fi
+
+    mkdir -p "$(dirname "$dest")"
+    cp "$source" "$dest"
+}
+
+# Delete a file, removing empty parent directories
+delete_synced_file() {
+    local file="$1"
+    local dry_run="${2:-false}"
+
+    if [ "$dry_run" = "true" ]; then
+        echo -e "  ${BLUE}[DRY-RUN]${NC} Would delete $file"
+        return
+    fi
+
+    rm -f "$file"
+    # Clean up empty parent dirs (stop at .claude or repo root)
+    local dir
+    dir=$(dirname "$file")
+    while [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; do
+        rmdir "$dir" 2>/dev/null || break
+        dir=$(dirname "$dir")
+    done
 }
