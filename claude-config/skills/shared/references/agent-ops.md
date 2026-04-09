@@ -84,7 +84,7 @@ Include this verbatim in every agent prompt, substituting `{absolute_worktree_pa
 You are working in a git worktree. `cd` does NOT persist between Bash tool calls. You MUST follow these rules:
 
 **For git commands**, use the worktree-git wrapper (NEVER bare `git`, `cd && git`, or `git -C`):
-    bash ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} <git-args>
+    ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} <git-args>
 
 **For file operations** (Read, Edit, Write), use full worktree paths:
     {absolute_worktree_path}/Path/To/File.swift
@@ -92,7 +92,7 @@ You are working in a git worktree. `cd` does NOT persist between Bash tool calls
 **For non-git Bash commands** that need to run in the worktree, use full paths in the command arguments (e.g., `ls {absolute_worktree_path}/some/dir`).
 
 Your FIRST action must be to verify your branch:
-    bash ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} branch --show-current
+    ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} branch --show-current
 It must print `{branch_name}`. If not, stop and report the error.
 ```
 
@@ -183,26 +183,26 @@ Before spawning agents, the coordinator must verify that the test environment co
 Spawned agents cannot use standalone `cd` (it does not persist between Bash tool calls) and `cd <dir> && git` / `git -C` are blocked. Use the **worktree-git wrapper** for all git operations:
 
 ```bash
-bash ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} <git-args...>
+~/.claude/scripts/worktree-git.sh {absolute_worktree_path} <git-args...>
 ```
 
 Examples:
 ```bash
-bash ~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch status
-bash ~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch add file1.swift file2.swift
-bash ~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch commit -F - <<'EOF'
+~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch status
+~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch add file1.swift file2.swift
+~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch commit -F - <<'EOF'
 Commit message here
 
 Fixes #123
 EOF
-bash ~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch branch --show-current
+~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch branch --show-current
 ```
 
 Steps:
-1. Verify branch: `bash ~/.claude/scripts/worktree-git.sh {worktree} branch --show-current`
-2. Stage specific files: `bash ~/.claude/scripts/worktree-git.sh {worktree} add <files>`
+1. Verify branch: `~/.claude/scripts/worktree-git.sh {worktree} branch --show-current`
+2. Stage specific files: `~/.claude/scripts/worktree-git.sh {worktree} add <files>`
 3. Commit with conventions from config
-4. Verify commit: `bash ~/.claude/scripts/worktree-git.sh {worktree} log --oneline -1`
+4. Verify commit: `~/.claude/scripts/worktree-git.sh {worktree} log --oneline -1`
 
 ---
 
