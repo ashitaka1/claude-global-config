@@ -870,9 +870,12 @@ resolve_conflict() {
     fi
 
     echo "" >&2
+    # Read from the terminal directly. The caller's outer loop typically has
+    # stdin redirected (e.g. `done < <(...)`), so a plain `read` would consume
+    # that stream instead of waiting for the user.
     while true; do
         local choice=""
-        read -p "  Resolution for $key — (r)epo / (l)ive / (d)iff / (e)dit / (s)kip? " -r choice
+        read -p "  Resolution for $key — (r)epo / (l)ive / (d)iff / (e)dit / (s)kip? " -r choice < /dev/tty
         case "$choice" in
             r|repo)
                 echo "repo"
