@@ -875,7 +875,7 @@ resolve_conflict() {
     # that stream instead of waiting for the user.
     while true; do
         local choice=""
-        read -p "  Resolution for $key — (r)epo / (l)ive / (d)iff / (e)dit / (s)kip? " -r choice < /dev/tty
+        read -p "  Resolution for $key — (r)epo / (l)ive / (m)erge / (d)iff / (e)dit / (s)kip? " -r choice < /dev/tty
         case "$choice" in
             r|repo)
                 echo "repo"
@@ -884,6 +884,27 @@ resolve_conflict() {
             l|live)
                 echo "live"
                 return
+                ;;
+            m|merge)
+                if [ ! -f "$repo_path" ] || [ ! -f "$live_path" ]; then
+                    echo "  Cannot merge: one side is missing. Use r/l/s instead." >&2
+                    continue
+                fi
+                local merge_tool="${MERGE_TOOL:-vimdiff}"
+                if ! command -v "$merge_tool" >/dev/null 2>&1; then
+                    echo "  Merge tool '$merge_tool' not found. Set MERGE_TOOL env var." >&2
+                    continue
+                fi
+                echo "  Opening $merge_tool. Save both panes with the merged content (e.g. :wqa in vimdiff)." >&2
+                "$merge_tool" "$live_path" "$repo_path" </dev/tty >/dev/tty 2>&1 || true
+                if cmp -s "$repo_path" "$live_path"; then
+                    echo "  Merge resolved — both sides identical." >&2
+                    # Either direction works since contents match; pick live so
+                    # the dispatcher's sync_single_file is a content-no-op.
+                    echo "live"
+                    return
+                fi
+                echo "  Files still differ after merge. Re-merge, pick a side, or skip." >&2
                 ;;
             d|diff)
                 echo "" >&2
@@ -899,7 +920,7 @@ resolve_conflict() {
                 fi
                 local editor="${EDITOR:-vim}"
                 echo "  Opening $target in $editor..." >&2
-                "$editor" "$target"
+                "$editor" "$target" </dev/tty >/dev/tty 2>&1 || true
                 echo "  Saved. Using edited file as resolution." >&2
                 # Edited live file becomes the source of truth — copy to repo
                 if [ "$target" = "$live_path" ]; then
@@ -914,7 +935,7 @@ resolve_conflict() {
                 return
                 ;;
             *)
-                echo "  Please enter r, l, d, e, or s" >&2
+                echo "  Please enter r, l, m, d, e, or s" >&2
                 ;;
         esac
     done
