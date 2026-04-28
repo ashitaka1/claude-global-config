@@ -848,26 +848,28 @@ resolve_conflict() {
     local repo_path="$2"
     local live_path="$3"
 
-    echo ""
-    echo -e "  ${YELLOW}CONFLICT${NC}  $key"
-    echo "  Both repo and live changed since last sync."
-    echo ""
+    # All user-facing output goes to stderr so callers can capture the
+    # resolution choice (repo/live/skip) cleanly via command substitution.
+    echo "" >&2
+    echo -e "  ${YELLOW}CONFLICT${NC}  $key" >&2
+    echo "  Both repo and live changed since last sync." >&2
+    echo "" >&2
 
     # Show compact diff
     if [ -f "$repo_path" ] && [ -f "$live_path" ]; then
-        diff -u --label "repo" "$repo_path" --label "live" "$live_path" | head -30 || true
+        diff -u --label "repo" "$repo_path" --label "live" "$live_path" | head -30 >&2 || true
         local diff_lines
         diff_lines=$(diff -u "$repo_path" "$live_path" 2>/dev/null | wc -l | tr -d ' ')
         if [ "$diff_lines" -gt 30 ]; then
-            echo "  ... ($((diff_lines - 30)) more lines, use (d)iff to see all)"
+            echo "  ... ($((diff_lines - 30)) more lines, use (d)iff to see all)" >&2
         fi
     elif [ -f "$repo_path" ]; then
-        echo "  Live file is missing (deleted or new in repo only)"
+        echo "  Live file is missing (deleted or new in repo only)" >&2
     elif [ -f "$live_path" ]; then
-        echo "  Repo file is missing (deleted or new in live only)"
+        echo "  Repo file is missing (deleted or new in live only)" >&2
     fi
 
-    echo ""
+    echo "" >&2
     while true; do
         local choice=""
         read -p "  Resolution for $key — (r)epo / (l)ive / (d)iff / (e)dit / (s)kip? " -r choice
@@ -881,11 +883,11 @@ resolve_conflict() {
                 return
                 ;;
             d|diff)
-                echo ""
+                echo "" >&2
                 if [ -f "$repo_path" ] && [ -f "$live_path" ]; then
-                    diff -u --label "repo" "$repo_path" --label "live" "$live_path" || true
+                    diff -u --label "repo" "$repo_path" --label "live" "$live_path" >&2 || true
                 fi
-                echo ""
+                echo "" >&2
                 ;;
             e|edit)
                 local target="$live_path"
@@ -893,9 +895,9 @@ resolve_conflict() {
                     target="$repo_path"
                 fi
                 local editor="${EDITOR:-vim}"
-                echo "  Opening $target in $editor..."
+                echo "  Opening $target in $editor..." >&2
                 "$editor" "$target"
-                echo "  Saved. Using edited file as resolution."
+                echo "  Saved. Using edited file as resolution." >&2
                 # Edited live file becomes the source of truth — copy to repo
                 if [ "$target" = "$live_path" ]; then
                     echo "live"
@@ -909,7 +911,7 @@ resolve_conflict() {
                 return
                 ;;
             *)
-                echo "  Please enter r, l, d, e, or s"
+                echo "  Please enter r, l, d, e, or s" >&2
                 ;;
         esac
     done
