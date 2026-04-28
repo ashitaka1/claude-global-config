@@ -621,6 +621,8 @@ cmd_reconcile() {
         [ $auto_live -gt 0 ] && echo -e "  ${GREEN}←${NC} $auto_live file(s) live → repo"
         [ $deletions -gt 0 ] && echo -e "  ${RED}×${NC} $deletions file(s) deleted"
         [ $resolved -gt 0 ] && echo -e "  ${YELLOW}!${NC} $resolved conflict(s) resolved"
+        local unresolved=$((conflicts - resolved))
+        [ $unresolved -gt 0 ] && echo -e "  ${YELLOW}!${NC} $unresolved unresolved conflict(s)"
         [ $skipped -gt 0 ] && echo -e "  ${BLUE}○${NC} $skipped item(s) skipped"
     fi
 
