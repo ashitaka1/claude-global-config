@@ -21,3 +21,6 @@ claude-config/plugins/
 
 # Worktrees
 .worktrees/
+
+# Per-project Claude Code settings (auto-created by permission prompts)
+.claude/
