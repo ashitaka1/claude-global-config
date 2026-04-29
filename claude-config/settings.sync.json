@@ -153,5 +153,8 @@
     "claude-md-management@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true
-  }
+  },
+  "theme": "light",
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true
 }
