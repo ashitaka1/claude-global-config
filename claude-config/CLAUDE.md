@@ -157,6 +157,39 @@ Before merging to main, verify the feature works in the target environment:
 | Dead code | "unused function returns value" | If unused, delete it |
 | Constants | "defaultTimeout == 10s" | Tautology |
 
+Most matches against this table are unconditional rejections. Rare exceptions exist — for example, an exact-value assertion that looks like algorithm-pinning may be acceptable if the function has only one reasonable closed form. Such exceptions are governed by the positive criteria below.
+
+### When a Test Is Worth Writing
+
+The anti-pattern table is a fast filter — if a test matches a pattern there, drop it without further review. But clearing the filter doesn't mean the test pulls its weight. For tests on real custom logic, score against three properties:
+
+> **A test is worth writing if it pins a contract you'd document, at a boundary input, against multiple classes of plausible mistake.**
+
+Hit at least two of three and the test pays for itself.
+
+**Doc-worthy contract.** If you'd write a doc-string about the property the function holds, a test pinning that property enforces the documentation. If you wouldn't bother to document it because it's implementation detail, don't bother to test it. *Doc-worthy* means a property a careful reader would want surfaced when reading the source for the first time — not "interesting enough to test" (which would be circular).
+
+**Boundary input.** A test at typical inputs largely restates what the code visibly does. A test at a *boundary* (zero, max, wrap, nil, empty, single-element, just-above/below a threshold) is where bugs hide. Per line of test, boundary cases carry more weight. This is a weight criterion, not a skip criterion — a typical-input case is sometimes the cleanest expression of the contract.
+
+**Multi-class mistakes.** A good test fails for a *family* of plausible bugs (forgot the branch, wrong formula, wrong types, removed a parameter). Before writing a test, name two or three distinct realistic mistakes it would catch. If you can name only one, it's a weak test.
+
+#### Pin contracts, not algorithms
+
+Phrase assertions in terms of input → output behavior, error conditions, and invariants — not internal arithmetic. The test for whether you've crossed the line: would a different correct implementation pass this? If yes, contract. If no, algorithm.
+
+Exact-value assertions are acceptable when the function has only one reasonable closed form (the formula *is* the contract). When multiple correct implementations exist, prefer behavioral assertions (positive, within plausible bounds, etc.). This is a judgment call, not a rule — name the trade-off.
+
+Project-level CLAUDE.md may make this criterion mandatory (e.g., projects shipping multiple alternative backends) or relax it.
+
+#### Failure messages should be diagnostic
+
+This is a separate criterion that governs *how a test is written*, not *whether to write it*. When a test fails, the expected-vs-actual output should point at the bug, not at test mechanics.
+
+- **Diagnostic:** `expected 150, got -42` — wrap math underflowed.
+- **Non-diagnostic:** `mock called 2 times, expected 1` — tells you about calls, not behavior.
+
+Reviewed at implementation time, not in the test plan.
+
 ### Testing Techniques
 
 > **Note:** Code examples below are illustrative (language-agnostic principles shown in pseudocode/Go style). Adapt to your project's language.

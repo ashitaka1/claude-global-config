@@ -43,8 +43,9 @@ When invoked with a plan file:
 2. Locate the test plan section
 3. Verify each test has required fields (see template below)
 4. **Critically evaluate** whether each test would actually be the category it claims
-5. Report issues and suggest improvements
-6. **Save the approved proposal** to `.claude/test-proposals/<branch-name>.md`
+5. Score borderline or rejection-candidate tests against the **Quality Scorecard** (see below)
+6. Report issues and suggest improvements
+7. **Save the approved proposal** to `.claude/test-proposals/<branch-name>.md`
 
 ### Required Test Plan Format
 
@@ -78,6 +79,24 @@ Custom Logic: Verifies switches are called in order
 ```
 This is actually **orchestration testing** (verifying call sequence), not integration. Reject it.
 
+### Quality Scorecard (Doc-Worthy / Boundary / Multi-Class)
+
+Once a test clears the anti-pattern filter and is correctly categorized, score it against three properties from the global testing philosophy. A test must hit **at least 2 of 3** to be worth writing.
+
+| Property | Question | Pass if... |
+|----------|----------|------------|
+| Doc-worthy contract | Would a careful reader want this property surfaced when reading the source for the first time? | Yes — a doc-string about it would be useful |
+| Boundary input | Does the test exercise a boundary of the input space (zero, max, wrap, nil, empty, single-element, just-above/below threshold)? | Yes |
+| Multi-class mistakes | Name two or three distinct realistic bugs the test catches (forgot the branch / wrong formula / wrong types / removed a parameter). | Two or more named convincingly |
+
+**When to apply the scorecard:**
+- For tests you would otherwise approve cleanly: skip the scorecard, just confirm the verdict.
+- For tests that are **borderline, rejection candidates, or likely user pushback targets**: produce the full scorecard with reasoning.
+
+This puts friction where the disagreement is. A 20-row scorecard for a 20-test plan that's all approvable is wasted effort.
+
+**Note on criterion 4 (pin contracts, not algorithms):** This is in the global guidance but is *not* a scorecard column — exact-value assertions are sometimes acceptable when the function has only one reasonable closed form. Apply it as a judgment heuristic when you suspect a test pins an algorithm rather than a contract. Project-level CLAUDE.md may override (some projects make contract-pinning mandatory).
+
 ### Phase 1 Reporting Format
 
 ```
@@ -88,6 +107,13 @@ This is actually **orchestration testing** (verifying call sequence), not integr
 
 ### Category Validation
 [For each test: does the proposed test actually match its claimed category?]
+
+### Quality Scorecard
+[Only for tests that are borderline, rejected, or expected to draw user pushback. Skip if cleanly approved.]
+
+| Test | Doc-worthy? | Boundary? | Multi-class? | Verdict |
+|------|-------------|-----------|--------------|---------|
+| ...  | Y/N         | Y/N       | Y/N (with named bugs) | Keep / Drop |
 
 ### Issues Found
 [List with confidence: HIGH (must fix) / MEDIUM (recommend)]
@@ -117,6 +143,20 @@ When invoked after tests are written:
    - Test actually tests the "Custom Logic Tested" it claimed
    - Test uses appropriate techniques (direct testing, state verification, proper setup)
    - Test would catch the bugs it claims to catch
+   - **Failure messages are diagnostic** (see below)
+
+### Failure-Message Diagnosticity
+
+For each implemented test, check that an induced failure would point at the bug, not at test mechanics. This is a check on test *implementation*, not on whether the test should exist — it belongs to Phase 2, not Phase 1.
+
+| Pattern | Example | Verdict |
+|---------|---------|---------|
+| Diagnostic value comparison | `expected 150, got -42` (wrap math underflowed) | OK |
+| Diagnostic state assertion | `expected map["eth0"], got map[]` (interface filter dropped everything) | OK |
+| Mock call counting | `mock called 2 times, expected 1` | FAIL — about calls, not behavior |
+| Opaque comparator | `complex.Equal(a, b) returned false` | FAIL — no diagnostic value |
+
+Flag tests with non-diagnostic failure modes for revision. The fix is usually rewriting the assertion in terms of observable state or values, not changing what the test exercises.
 
 ### Common Implementation Failures
 
