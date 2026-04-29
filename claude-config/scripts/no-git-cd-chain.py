@@ -23,8 +23,8 @@ def check_command(command: str) -> str | None:
     #   cd "$DIR" && git push
     if re.search(r'\bcd\s+\S+.*&&\s*git\b', command):
         return (
-            "Blocked: do not chain `cd <dir> && git ...`. "
-            "For worktree git operations, use: bash ~/.claude/scripts/worktree-git.sh <worktree-path> <git-args>"
+            "Run git from a Bash call whose working directory is already the target. "
+            "For a worktree from elsewhere, call `~/.claude/scripts/worktree-git.sh <worktree-path> <git-args>`."
         )
 
     # Pattern 2: git -C <dir> ...
@@ -33,8 +33,8 @@ def check_command(command: str) -> str | None:
     #   git -C "$REPO" pull
     if re.search(r'\bgit\s+-C\b', command):
         return (
-            "Blocked: do not use `git -C <dir>`. "
-            "For worktree git operations, use: bash ~/.claude/scripts/worktree-git.sh <worktree-path> <git-args>"
+            "Run git from a Bash call whose working directory is already the target. "
+            "For a worktree from elsewhere, call `~/.claude/scripts/worktree-git.sh <worktree-path> <git-args>`."
         )
 
     return None
