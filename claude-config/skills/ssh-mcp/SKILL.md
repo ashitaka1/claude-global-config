@@ -17,7 +17,7 @@ Parse `$ARGUMENTS` for:
 - **host** (required, positional): hostname or IP address
 - **--user USER**: SSH username (default: `viam`)
 - **--scope user**: use user-level scope instead of project scope
-- **--name NAME**: MCP server name (default: `ssh-<host>`)
+- **--name NAME**: MCP server name (default: `ssh-<host>` with any `.local`/`.lan`/`.home` suffix stripped and dots replaced with hyphens — MCP names only allow letters, numbers, hyphens, underscores)
 - **--no-sudo**: disable sudo support
 
 ## Steps
