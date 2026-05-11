@@ -55,12 +55,20 @@ NEVER make changes directly on main. Follow the development workflow.
 
 #### Commit messages
 
-1. Limit commit message content to the content/code changes.
-2. Do not reference concepts from outside the changes themselves, such as chat contents.
-3. Especially do not reference unused alternative implementation possibilities where you received feedback to do something else.
-4. The audience of the commit log messages are the contributors to the repo.
-5. Do not include a co-author message.
-6. Use `git commit -F - <<'EOF'` to pass multi-line messages. Do not use `$(cat <<'EOF'...)` — the `$()` command substitution triggers unnecessary approval prompts.
+The audience is contributors reading `git log` — typically running `git blame` on a confusing line, hunting a regression, or scanning recent history. Write for them. Not for the end user, not as release notes, not as a record of our conversation.
+
+  1. **Default to subject-only.** A body earns its place only when it answers a *why* the diff cannot — a hidden constraint, a non-obvious technical cause, or an architectural decision a contemporary reviewer would otherwise puzzle over. Test each candidate line: would a developer running `git blame` on this code months from now be confused without it? If no, cut.
+
+     Never produce:
+     - **Bug narrative.** Symptoms, reproduction, operator-perceived behavior — issue-tracker material, not commit material.
+     - **Pitch tone.** "Now possible", "X is optional", "use this when", "no longer requires", "lets you".
+     - **Listings of absences.** "No DHCP proxy, no TFTP — only X." Describe what the code does, not what it avoids.
+     - **Restatements of the diff.** If a line re-narrates what the new code does, it carries no signal the diff doesn't already.
+     - **Anything outside the diff.** Our conversation, alternatives you tried, project events ("hackathon-ready"), decorative ticket references. (Functional trailers like `Closes #45` that drive issue automation are fine — they're part of the change.) The commit describes the change, not its circumstances.
+
+  2. Do not include a co-author message.
+
+  3. Use `git commit -F - <<'EOF'` for multi-line messages. The `$(cat <<'EOF'...)` form triggers unnecessary approval prompts.
 
 ## Documentation Standards
 
