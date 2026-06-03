@@ -9,9 +9,9 @@ Generate a new Viam module with these parameters: $ARGUMENTS
 For example: `mycorp-sensor go public myorg sensor mycorp-sensor --register`
 
 **Valid subtypes:** `sensor`, `camera`, `motor`, `arm`, `movement_sensor`, `vision`,
-`generic-component`, `generic-service`, etc. **`generic` is not a valid subtype** —
-you must specify `generic-component` (`rdk:component:generic`) or `generic-service`
-(`rdk:service:generic`).
+`generic-component`, `generic-service`, etc. The subtype also fixes whether the module is a
+component or a service — for a generic resource, choose `generic-component`
+(`rdk:component:generic`) or `generic-service` (`rdk:service:generic`).
 
 **Generate and register** (requires `viam login`):
 
@@ -26,23 +26,25 @@ viam module generate \
   --register
 ```
 
-**Generate local-only** (no authentication needed):
+**Generate local-only** (no `viam login` needed, but `--public-namespace` is still required):
 
 ```bash
 viam module generate \
   --name MODULE_NAME \
   --language LANGUAGE \
+  --public-namespace NAMESPACE \
   --resource-subtype SUBTYPE \
   --model-name MODEL_NAME
 ```
 
-The resource type (component vs. service) is inferred from the subtype — there is no `--resource-type` flag.
+Run the command yourself — supplying every input as a flag makes it non-interactive, so
+execute it directly rather than asking the user to. Two requirements to watch:
 
-Horrifyingly, there is a TTY requirement for this cli, so even though providing all those arguments means you don't need interactive mode, claude code cannot successfully execute that command. So instead, output:
-
-"Here's the command to generate the module:
-COMMAND
-Please tell me when you've finished running that."
+- **`--public-namespace` is required even for local-only generation.** Without all of
+  `--name`, `--language`, `--public-namespace`, `--resource-subtype`, and `--model-name`,
+  the command fails with `missing required flags for non-interactive mode`.
+- **`--register` requires being logged in first** (`viam login`); otherwise it fails with
+  `authentication required`.
 
 After generation:
 1. Move generated files from subdirectory to project root if needed
