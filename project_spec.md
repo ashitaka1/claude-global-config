@@ -42,7 +42,7 @@ This project provides a global configuration system for Claude Code, enabling co
 1. ✅ Core sync system functional
 2. ✅ Global CLAUDE.md with development workflow
 3. ✅ Script consolidation and statusline rewrite
-4. ⏳ Worktree-based feature development workflow
+4. ✅ Worktree-based feature development workflow
 5. ⏳ Cross-platform compatibility
 
 ## Tech Stack
@@ -125,42 +125,40 @@ files:
 - `claude-config/settings.sync.json` (updated paths)
 - `.sync-config.yaml` (added scripts directory)
 
-### Milestone 4: Worktree-Based Feature Development (In Progress)
+### Milestone 4: Worktree-Based Feature Development
 
-**Approach:** Use git worktrees for feature branches instead of branch switching
+**Approach:** Use Claude Code's native worktree isolation rather than managing worktrees by hand
 
 **Key Decisions:**
-- Place worktrees in `.worktrees/` directory (added to .gitignore)
-- Modified `/start-feature` skill to create worktrees automatically
-- Updated global CLAUDE.md to document worktree workflow
-- Updated pre-work-check agent description to emphasize running before changes
-- Added worktree cleanup step to "Completing Work" workflow
+- Agents run with `isolation: "worktree"`; the harness creates the worktree under `.claude/worktrees/agent-<id>` and removes it if nothing changed
+- `/start-feature` calls `EnterWorktree`, which moves the session's working directory; `/end-feature clean` calls `ExitWorktree`
+- An agent owing the coordinator a specific branch renames its own with `git branch -m`
+- `worktree.baseRef` set to `head`, so worktrees fork from local work rather than `origin/<default-branch>`
 
 **Rationale:**
-- Subagents launched via Task tool cannot access files outside project root
-- Worktrees keep all development within the project directory tree
-- Avoids permission scoping issues with external paths
-- Allows parallel work on multiple features without stashing
+- Subagents cannot reach paths outside the project root, and native isolation places worktrees inside it
+- Inside its worktree an agent runs plain `git`, so no wrapper script or directory flag is needed
+- Subagent worktrees inherit `baseRef`; under `fresh` a bug-fixer spawned from a feature branch would silently start from the remote default branch
 
 **Trade-offs considered:**
-- Branch switching: Simpler mental model but requires stashing, conflicts with subagent permissions
-- External worktrees (e.g., `~/worktrees/`): Cleaner project dir but breaks subagent access
-- In-project worktrees: Chosen for subagent compatibility despite adding .worktrees/ directory
+- Hand-rolled worktrees in `.worktrees/` with a `worktree-git.sh` wrapper: what this replaced. Written when agents could not persist `cd` between Bash calls, and it required a hook to block `cd && git` and the directory flag
+- `claude -w` at session start: works, but fixes the branch decision before the session begins
+- `EnterWorktree` mid-session: chosen, because branch and tree creation stay in the REPL where the decision is actually made
 
 **Files affected:**
-- `claude-config/CLAUDE.md` (updated workflow documentation)
-- `claude-config/skills/start-feature/SKILL.md` (modified to create worktrees)
-- `claude-config/agents/pre-work-check.md` (clarified when to use)
-- `.gitignore` (added `.worktrees/`)
+- `claude-config/CLAUDE.md` (dropped the directory-flag guidance)
+- `claude-config/skills/start-feature/SKILL.md`, `end-feature/SKILL.md`
+- `claude-config/skills/shared/references/agent-ops.md`, `parallel-fix`, `parallel-feature`
+- `claude-config/agents/bug-fixer.md`
+- `claude-config/settings.sync.json` (hook removed, `worktree.baseRef`)
 
 **Open questions:**
-- Should we provide a `/clean-worktrees` skill for batch cleanup?
-- How to handle worktree references in project-specific MEMORY.md?
+- `/parallel-fix` still has the coordinator assign branch names; worth testing whether the rename step holds up across a full parallel run
 
 ## Implementation Notes
 
-### Worktree Directory Naming
-Branch names use `/` (e.g., `ashitaka1/feature-foo`) but worktree directories use `-` (e.g., `.worktrees/ashitaka1-feature-foo`) because `/` in directory names complicates path handling.
+### Worktree Placement
+Worktrees live under `.claude/worktrees/`, which is already covered by the `.claude/` entry in `.gitignore`. The harness names agent worktrees after the agent id.
 
 ### Sync Config Discipline
 When adding new files to deploy, always update `.sync-config.yaml` rather than hardcoding paths in shell scripts. This keeps the sync system maintainable and self-documenting.
@@ -196,6 +194,11 @@ GNU stat (Linux) uses different flags. Need platform detection and conditional s
 Parses `claude plugin list` output with: `grep -E '^\s+❯' | awk '{print $2}'`
 
 This depends on exact CLI output format. Should use more robust parsing or handle format changes gracefully.
+
+### Sync dry-run does not enumerate directory contents
+**Location:** `sync.sh` in `sync_directory()`
+
+A dry-run prints `Would sync directory` without listing the files it would add or delete, so deletions cannot be previewed. The real run takes a backup first, but the preview is not actionable.
 
 ### No test suite
 The project consists primarily of shell scripts but has no automated tests. Validation is manual via `./sync.sh status`. Consider adding basic integration tests.

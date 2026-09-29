@@ -6,7 +6,7 @@ This file provides project-specific guidance for working on this repository.
 
 Project phase: Active Development
 
-Configuration sync system is functional. Ongoing work on sync robustness and documentation.
+Configuration sync system is functional. Agent and session worktrees use Claude Code's native isolation; writing guidance is consolidated in one section of the global CLAUDE.md.
 
 ## About This Repository
 

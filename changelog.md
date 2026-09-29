@@ -11,13 +11,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Documented `.sync` suffix naming convention in README-SYNC.md
 - Consolidated shell scripts into `claude-config/scripts/` directory (was individual files at `claude-config/` root)
 - Rewrote statusline with model name, context window bar, remote sync status, per-session color theming, and last user message
+- Consolidated code-comment, commit-message, PR-description, and documentation prose rules into one `Writing` section in `claude-config/CLAUDE.md`; downstream files reference it instead of restating it
+- Collapsed the doc-updater agent/skill pairs (`changelog-updater`, `claude-md-updater`, `project-spec-updater`, `readme-updater`, `retro-reviewer`) into forked skills (`update-changelog`, `update-claude-md`, `update-project-spec`, `update-readme`, `retro`) that combine the slash command and the isolated context in one file
+- Replaced the worktree-isolation workaround (`worktree-git.sh` wrapper, `no-git-cd-chain.py` hook blocking `cd`/`git -C`) with native `isolation: "worktree"`; `bug-fixer` now renames its own worktree's branch instead of expecting a pre-created one, and `git -C *` is pre-approved
+- Feature completion now stops after `/revise-claude-md` and tells the user to run `/end-feature` themselves, rather than assuming a script would finalize the branch
+- `end-feature`, `parallel-feature`, and `parallel-fix` skills set to manual-only invocation, so Claude no longer auto-triggers merges, pushes, or background-agent fan-out from inferred intent
+- Finished migrating `Bash` permission patterns off the `cmd:*` glob form (`python*`, `pip*`, `swift*`, `make*` now match without the trailing `:*`)
 
 ### Added
 - `templates/` directory to sync config (deploys to `~/.claude/templates/`)
 - `claude-config/scripts/terminal-color.sh` for TTY-based per-session accent colors
+- Synced directory entries can declare `exclude` patterns (rsync excludes); used to keep the claude.ai-managed `skills/synced/` tree out of the repo
 
 ### Fixed
 - viam-claude/README.md: removed phantom skills, added missing ones, fixed install path
+- `claude-config/settings.sync.json` recovered 93 lines of live configuration it had never recorded, including nine status-line hook events, exposed once `pull` stopped aborting early
+- `sync.sh status`/`deploy`/`pull` no longer abort after the first changed item — `((count++))` returns the pre-increment value, which is falsy on a counter's first call, killing the run under `set -e`
+- `sync.sh status` no longer reports the skills directory or plugins as diverged when only excluded content differs — checksums and file/plugin counts now honor the same exclude patterns as sync itself
+- Pulling or comparing plugins now excludes claude.ai-provisioned `@synced` plugins, which `install-plugins.sh` can't resolve on another machine
+- `parallel-feature` and `script-writer` skill files renamed from `skill.md` to `SKILL.md` — the lowercase name loaded only on case-insensitive filesystems
+- README.md and root CLAUDE.md file listings corrected to match what's currently shipped — dropped four removed agents and a removed script, added missing skills
 
 ## [2026-02-06]
 
