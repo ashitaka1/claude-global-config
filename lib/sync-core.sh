@@ -230,7 +230,8 @@ parse_sync_config() {
             source: .source,
             target: .target,
             name: (.name // ((.target | split("/") | last) + "/")),
-            recursive: (.recursive // true)
+            recursive: (.recursive // true),
+            exclude: (.exclude // [])
         } | {
             source: (if .source | startswith("~/") then
                         ("'"$HOME"'/" + (.source | ltrimstr("~/")))
@@ -247,7 +248,8 @@ parse_sync_config() {
                         ($repo_dir + "/" + .target)
                      end),
             name: .name,
-            recursive: .recursive
+            recursive: .recursive,
+            exclude: .exclude
         })
     ')
 
@@ -345,6 +347,9 @@ sync_directory() {
 
     if [ "$dry_run" = "true" ]; then
         echo -e "${BLUE}[DRY-RUN]${NC} Would sync directory: $source → $expanded_target"
+        if [ -n "${exclude_patterns:-}" ]; then
+            echo -e "${BLUE}[DRY-RUN]${NC}   excluding: ${exclude_patterns}"
+        fi
         return 0
     fi
 
@@ -357,7 +362,12 @@ sync_directory() {
     mkdir -p "$expanded_target"
 
     # Sync directory contents
-    rsync -a --delete "$source/" "$expanded_target/"
+    local rsync_excludes=()
+    local pattern
+    for pattern in ${exclude_patterns:-}; do
+        rsync_excludes+=(--exclude "$pattern")
+    done
+    rsync -a --delete "${rsync_excludes[@]}" "$source/" "$expanded_target/"
     echo -e "${GREEN}✓${NC} Synced directory: $source → $expanded_target"
 }
 

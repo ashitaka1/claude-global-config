@@ -21,6 +21,8 @@ sync:
     - source: claude-config/skills
       target: ~/.claude/skills
       recursive: true
+      exclude:
+        - synced/          # Claude-managed skills, not ours to version
 
     - source: templates
       target: ~/.claude/templates

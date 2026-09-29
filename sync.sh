@@ -302,8 +302,9 @@ cmd_deploy() {
         local source=$(extract_field "$entry" "source")
         local target=$(extract_field "$entry" "target")
         local name=$(extract_field "$entry" "name")
+        local excl=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
         if directories_differ "$source" "$target"; then
-            affected+=("dir:$source:$target:$name")
+            affected+=("dir:$source:$target:$name:$excl")
         fi
     done < <(get_sync_directories "$config_json")
 
@@ -336,7 +337,7 @@ cmd_deploy() {
             sync_file "$source" "$target" "$BACKUP_DIR" "$dry_run"
             changes=$((changes + 1))
         elif [[ "$item" == dir:* ]]; then
-            IFS=':' read -r _ source target name <<< "$item"
+            IFS=':' read -r _ source target name exclude_patterns <<< "$item"
             sync_directory "$source" "$target" "$BACKUP_DIR" "$dry_run"
             changes=$((changes + 1))
         fi
@@ -387,8 +388,9 @@ cmd_pull() {
         local source=$(extract_field "$entry" "source")
         local target=$(extract_field "$entry" "target")
         local name=$(extract_field "$entry" "name")
+        local excl=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
         if directories_differ "$target" "$source"; then
-            affected+=("dir:$target:$source:$name")
+            affected+=("dir:$target:$source:$name:$excl")
             affected_names+=("$name")
         fi
     done < <(get_sync_directories "$config_json")
@@ -434,7 +436,7 @@ cmd_pull() {
             sync_file "$source" "$target" "$BACKUP_DIR" "$dry_run"
             changes=$((changes + 1))
         elif [[ "$item" == dir:* ]]; then
-            IFS=':' read -r _ source target name <<< "$item"
+            IFS=':' read -r _ source target name exclude_patterns <<< "$item"
             sync_directory "$source" "$target" "$BACKUP_DIR" "$dry_run"
             changes=$((changes + 1))
         fi
