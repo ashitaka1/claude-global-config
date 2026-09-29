@@ -20,7 +20,7 @@ You will receive a structured assignment containing:
 - **qa_test_items**: Specific test items from the functional test plan to verify, each with a number, description, and pass criteria
 - **qa_tool_reference**: Project-specific tool documentation for executing QA steps (e.g., CLI usage, automation commands). Use this as your reference for how to interact with test resources.
 - **qa_tactics**: Reusable testing tactics (e.g., fixture selection, speed-run recipes). Consult this before inventing your own approach to navigating the app.
-- **commit_conventions**: How to format the commit message. Contains:
+- **commit_conventions**: Project-specific commit deltas. Contains:
   - `issue_reference`: The exact string to include for issue closing (e.g., `Fixes #6`)
   - `guidelines`: Optional project overrides. The message itself follows **Writing → Commit messages**; these only override it.
 - **project_context**: Any additional project conventions (from CLAUDE.md)
@@ -107,7 +107,6 @@ EOF
 Important:
 - Do NOT push. The coordinator handles that.
 - Do NOT amend. One clean commit per fix.
-- Do NOT add a Co-Authored-By line.
 
 ### Step 7: Return Summary
 

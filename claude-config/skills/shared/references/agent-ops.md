@@ -48,8 +48,7 @@ Project-specific commit deltas. The message itself follows **Writing → Commit 
 ```
 issue-reference: "Fixes $ISSUE"
 guidelines: |
-  - First line: imperative summary, under 72 characters
-  - ...
+  - <project override, e.g. required ticket-key prefix>
 ```
 
 #### QA
@@ -93,7 +92,6 @@ An unchanged worktree is removed automatically. One holding commits persists, an
 ```bash
 git worktree remove --force .claude/worktrees/agent-<id>
 git worktree prune
-git branch -D $BRANCH_NAME
 ```
 
 ---
@@ -157,7 +155,6 @@ Run plain `git` from inside your worktree:
 3. Commit with conventions from config
 4. Verify commit: `git log --oneline -1`
 
-Examples:
 ```bash
 git commit -F - <<'EOF'
 Commit message here
