@@ -110,7 +110,7 @@ cmd_status() {
         if files_differ "$source" "$target"; then
             format_status_line "diverged" "$name" "DIVERGED"
             format_diverged_files "Repo:" "$source" "Live:" "$target"
-            ((issues++))
+            issues=$((issues + 1))
         else
             if [ -f "$source" ]; then
                 local lines=$(wc -l < "$source" 2>/dev/null | tr -d ' ' || echo "?")
@@ -136,7 +136,7 @@ cmd_status() {
 
             echo "  Repo:  $repo_count files"
             echo "  Live:  $live_count files"
-            ((issues++))
+            issues=$((issues + 1))
         else
             local count=$(find "$source" -type f 2>/dev/null | wc -l | tr -d ' ')
             format_status_line "in-sync" "$name" "($count files)"
@@ -154,7 +154,7 @@ cmd_status() {
             format_status_line "diverged" "plugins" "DIVERGED"
             echo "  Repo:  $repo_plugins plugin(s) in plugins.txt"
             echo "  Live:  $live_plugins plugin(s) installed"
-            ((issues++))
+            issues=$((issues + 1))
         else
             format_status_line "in-sync" "plugins" "($repo_plugins plugin(s))"
         fi
@@ -330,15 +330,15 @@ cmd_deploy() {
     for item in "${affected[@]}"; do
         if [[ "$item" == "plugins" ]]; then
             deploy_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
-            ((changes++))
+            changes=$((changes + 1))
         elif [[ "$item" == file:* ]]; then
             IFS=':' read -r _ source target name <<< "$item"
             sync_file "$source" "$target" "$BACKUP_DIR" "$dry_run"
-            ((changes++))
+            changes=$((changes + 1))
         elif [[ "$item" == dir:* ]]; then
             IFS=':' read -r _ source target name <<< "$item"
             sync_directory "$source" "$target" "$BACKUP_DIR" "$dry_run"
-            ((changes++))
+            changes=$((changes + 1))
         fi
     done
 
@@ -428,15 +428,15 @@ cmd_pull() {
     for item in "${affected[@]}"; do
         if [[ "$item" == "plugins" ]]; then
             pull_plugins "$REPO_DIR/claude-config/plugins.txt" "$dry_run"
-            ((changes++))
+            changes=$((changes + 1))
         elif [[ "$item" == file:* ]]; then
             IFS=':' read -r _ source target name <<< "$item"
             sync_file "$source" "$target" "$BACKUP_DIR" "$dry_run"
-            ((changes++))
+            changes=$((changes + 1))
         elif [[ "$item" == dir:* ]]; then
             IFS=':' read -r _ source target name <<< "$item"
             sync_directory "$source" "$target" "$BACKUP_DIR" "$dry_run"
-            ((changes++))
+            changes=$((changes + 1))
         fi
     done
 
@@ -502,29 +502,29 @@ cmd_reconcile() {
             repo-changed|new-repo)
                 echo -e "  ${GREEN}→${NC} $checksum_key  (repo → live)"
                 sync_single_file "$repo_path" "$live_path" "$BACKUP_DIR" "$dry_run"
-                ((auto_repo++))
+                auto_repo=$((auto_repo + 1))
                 ;;
 
             live-changed|new-live)
                 echo -e "  ${GREEN}←${NC} $checksum_key  (live → repo)"
                 sync_single_file "$live_path" "$repo_path" "$BACKUP_DIR" "$dry_run"
-                ((auto_live++))
+                auto_live=$((auto_live + 1))
                 ;;
 
             deleted-repo)
                 echo -e "  ${RED}×${NC} $checksum_key  (deleted in repo → delete live)"
                 delete_synced_file "$live_path" "$dry_run"
-                ((deletions++))
+                deletions=$((deletions + 1))
                 ;;
 
             deleted-live)
                 echo -e "  ${RED}×${NC} $checksum_key  (deleted in live → delete repo)"
                 delete_synced_file "$repo_path" "$dry_run"
-                ((deletions++))
+                deletions=$((deletions + 1))
                 ;;
 
             both-changed)
-                ((conflicts++))
+                conflicts=$((conflicts + 1))
                 if [ "$dry_run" = "true" ]; then
                     echo -e "  ${YELLOW}!${NC} $checksum_key  (CONFLICT — both changed)"
                     continue
@@ -552,7 +552,7 @@ cmd_reconcile() {
                         else
                             delete_synced_file "$live_path" "false"
                         fi
-                        ((resolved++))
+                        resolved=$((resolved + 1))
                         ;;
                     live)
                         if [ -f "$live_path" ]; then
@@ -560,10 +560,10 @@ cmd_reconcile() {
                         else
                             delete_synced_file "$repo_path" "false"
                         fi
-                        ((resolved++))
+                        resolved=$((resolved + 1))
                         ;;
                     skip)
-                        ((skipped++))
+                        skipped=$((skipped + 1))
                         ;;
                 esac
                 ;;
@@ -600,7 +600,7 @@ cmd_reconcile() {
                     ;;
                 *)
                     echo "  Skipped plugins"
-                    ((skipped++))
+                    skipped=$((skipped + 1))
                     ;;
             esac
         fi

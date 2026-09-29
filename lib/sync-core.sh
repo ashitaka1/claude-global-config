@@ -678,7 +678,7 @@ deploy_plugins() {
             fi
         else
             echo -e "    ${RED}(failed: $output)${NC}"
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done < "$plugins_file"
 
