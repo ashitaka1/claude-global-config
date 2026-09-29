@@ -710,7 +710,7 @@ pull_plugins() {
 
     # Get list of installed plugins
     local installed
-    installed=$(get_installed_plugins)
+    installed=$(get_installed_plugins | grep -v '@synced$' || true)
 
     if [ -z "$installed" ]; then
         echo -e "${YELLOW}⚠${NC}  No plugins installed"
