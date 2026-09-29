@@ -364,6 +364,52 @@ sync_file() {
     echo -e "${GREEN}✓${NC} Synced: $source → $expanded_target"
 }
 
+# List what a directory sync would add, update and delete. rsync's own dry-run
+# enumerates this; --out-format gives the itemize flags (YXcstpoguax, where the
+# second character is the file type) followed by the path.
+preview_directory_sync() {
+    local source="$1"
+    local target="$2"
+    shift 2
+
+    local changes
+    # --checksum compares content, matching directories_differ. rsync's default
+    # size+mtime check would list content-identical files as writes and bury the
+    # deletions this preview exists to show.
+    changes=$(rsync -a --delete --dry-run --checksum --out-format='%i %n' "$@" \
+        "$source/" "$target/" 2>/dev/null) || {
+        echo -e "${BLUE}[DRY-RUN]${NC}   ${YELLOW}could not enumerate changes${NC}"
+        return 0
+    }
+
+    if [ -z "$changes" ]; then
+        echo -e "${BLUE}[DRY-RUN]${NC}   no file changes"
+        return 0
+    fi
+
+    local writes=0 deletes=0
+    local line flags path
+    while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        flags="${line%% *}"
+        path="${line#* }"
+        # rsync pads the itemize field, so a deletion leaves leading spaces
+        path="${path#"${path%%[![:space:]]*}"}"
+        if [ "$flags" = "*deleting" ]; then
+            echo -e "${BLUE}[DRY-RUN]${NC}   ${RED}delete${NC} $path"
+            deletes=$((deletes + 1))
+        elif [ "${flags:0:1}" = "." ] || [ "${flags:1:1}" = "d" ]; then
+            # "." is an attribute-only touch (mtime, perms); "d" is a directory
+            continue
+        else
+            echo -e "${BLUE}[DRY-RUN]${NC}   write  $path"
+            writes=$((writes + 1))
+        fi
+    done <<< "$changes"
+
+    echo -e "${BLUE}[DRY-RUN]${NC}   ${writes} to write, ${deletes} to delete"
+}
+
 sync_directory() {
     local source="$1"
     local target="$2"
@@ -376,11 +422,18 @@ sync_directory() {
         return 1
     fi
 
+    local rsync_excludes=()
+    local pattern
+    for pattern in ${exclude_patterns:-}; do
+        rsync_excludes+=(--exclude "$pattern")
+    done
+
     if [ "$dry_run" = "true" ]; then
         echo -e "${BLUE}[DRY-RUN]${NC} Would sync directory: $source → $expanded_target"
         if [ -n "${exclude_patterns:-}" ]; then
             echo -e "${BLUE}[DRY-RUN]${NC}   excluding: ${exclude_patterns}"
         fi
+        preview_directory_sync "$source" "$expanded_target" ${rsync_excludes[@]+"${rsync_excludes[@]}"}
         return 0
     fi
 
@@ -393,11 +446,6 @@ sync_directory() {
     mkdir -p "$expanded_target"
 
     # Sync directory contents
-    local rsync_excludes=()
-    local pattern
-    for pattern in ${exclude_patterns:-}; do
-        rsync_excludes+=(--exclude "$pattern")
-    done
     rsync -a --delete ${rsync_excludes[@]+"${rsync_excludes[@]}"} "$source/" "$expanded_target/"
     echo -e "${GREEN}✓${NC} Synced directory: $source → $expanded_target"
 }
@@ -801,12 +849,20 @@ enumerate_tracked_files() {
         local target=$(extract_field "$entry" "target")
         local name=$(extract_field "$entry" "name")
         local dir_name="${name%/}"
+        local exclude_patterns=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
 
-        # Collect all files from both sides to catch additions/deletions
+        # Collect all files from both sides to catch additions/deletions.
+        # Excluded subtrees stay out, the same as sync_directory's rsync.
+        local prune=()
+        local pattern
+        for pattern in ${exclude_patterns:-}; do
+            prune+=(-name "${pattern%/}" -prune -o)
+        done
+
         local all_files
         all_files=$(
-            (cd "$source" 2>/dev/null && find . -type f | sed 's|^\./||'
-             cd "$target" 2>/dev/null && find . -type f | sed 's|^\./||') | sort -u
+            (cd "$source" 2>/dev/null && find . ${prune[@]+"${prune[@]}"} -type f -print | sed 's|^\./||'
+             cd "$target" 2>/dev/null && find . ${prune[@]+"${prune[@]}"} -type f -print | sed 's|^\./||') | sort -u
         )
 
         while IFS= read -r rel_path; do
@@ -849,15 +905,6 @@ classify_file() {
         fi
         return
     fi
-        local exclude_patterns=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
-
-        # Collect all files from both sides to catch additions/deletions.
-        # Excluded subtrees stay out, the same as sync_directory's rsync.
-        local prune=()
-        local pattern
-        for pattern in ${exclude_patterns:-}; do
-            prune+=(-name "${pattern%/}" -prune -o)
-        done
 
     # File deleted on one side
     if [ "$repo_checksum" = "MISSING" ]; then
