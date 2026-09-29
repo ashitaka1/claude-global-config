@@ -39,13 +39,28 @@ def main() -> None:
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         sys.exit(0)
 
-    if branch == "main":
-        print(json.dumps({
-            "decision": "block",
-            "reason": "BLOCKED: You tried to work on main. Use proper development protocol.",
-        }))
+    if branch != "main":
         sys.exit(0)
 
+    # A gitignored file cannot become a commit, so editing one on main does not
+    # put work on main. Scratch notes and .claude/test-proposals/ land here.
+    try:
+        ignored = subprocess.run(
+            ["git", "check-ignore", "-q", file_path],
+            capture_output=True,
+            timeout=5,
+            cwd=file_dir,
+        ).returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        ignored = False
+
+    if ignored:
+        sys.exit(0)
+
+    print(json.dumps({
+        "decision": "block",
+        "reason": "BLOCKED: You tried to work on main. Use proper development protocol.",
+    }))
     sys.exit(0)
 
 
