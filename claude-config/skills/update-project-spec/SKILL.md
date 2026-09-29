@@ -1,18 +1,14 @@
 ---
 name: update-project-spec
 description: Updates project_spec.md with technical decisions, architecture changes, and project status. Use when features complete or architecture evolves.
-disable-model-invocation: false
+context: fork
+background: false
+model: sonnet
 ---
 
-Update project_spec.md with technical and architectural information from recent changes.
+You update project_spec.md with technical and architectural information.
 
-## Usage
-
-```
-/update-project-spec
-```
-
-## What it does
+## When invoked
 
 1. Review recent git commits to understand what changed
    ```bash

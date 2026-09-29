@@ -1,18 +1,14 @@
 ---
 name: retro
 description: Reviews Claude Code usage patterns and suggests workflow improvements. Use periodically to optimize agents, skills, and automation.
-disable-model-invocation: false
+context: fork
+background: false
+model: sonnet
 ---
 
-Review Claude Code workflow and suggest improvements.
+You are a Claude Code workflow consultant helping optimize development practices.
 
-## Usage
-
-```
-/retro
-```
-
-## What it does
+## When invoked
 
 1. Reflect on the current Claude Code session — what worked well, what was friction
 2. Review the project's .claude/ directory structure
@@ -32,7 +28,7 @@ Review Claude Code workflow and suggest improvements.
 - Is the project-level CLAUDE.md clear and complete?
 - Is Current Status up to date?
 - Are project-specific conventions documented?
-- Is the global CLAUDE.md focused on universal standards?
+- Is the global CLAUDE.md (`claude-config/CLAUDE.md` or `~/.claude/CLAUDE.md`) focused on universal standards?
 
 ### Agents
 - Are descriptions clear enough for Claude to delegate appropriately?

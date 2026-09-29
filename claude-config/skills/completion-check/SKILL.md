@@ -18,11 +18,11 @@ Runs through the completion checklist:
 
 1. **Tests passing** — Run the project's specified test command and verify all tests pass.
 
-2. **Documentation updated** — Delegate to documentation agents **in parallel** as appropriate:
-   - `readme-updater` — if user-facing changes were made
-   - `project-spec-updater` — if technical/architectural changes were made
-   - `changelog-updater` — if changes affect users/contributors
-   - `claude-md-updater` — if workflow or project status changes
+2. **Documentation updated** — Invoke the documentation skills **in parallel** as appropriate:
+   - `/update-readme` — if user-facing changes were made
+   - `/update-project-spec` — if technical/architectural changes were made
+   - `/update-changelog` — if changes affect users/contributors
+   - `/update-claude-md` — if workflow or project status changes
 
 3. **Update project CLAUDE.md** — Ensure "Current Status" section reflects the current state of the project.
 
@@ -41,11 +41,11 @@ When invoked:
    git diff main...HEAD --stat
    ```
 
-4. Based on the changes, launch the appropriate documentation agents in parallel using the Agent tool:
-   - Use `readme-updater` if there are user-facing changes
-   - Use `project-spec-updater` if there are architectural or technical changes
-   - Use `changelog-updater` if there are user/contributor-facing changes
-   - Use `claude-md-updater` if project status or workflow changed
+4. Based on the changes, invoke the appropriate documentation skills with the Skill tool, all in one message so they run in parallel. Each forks into its own context and returns when done.
+   - `update-readme` if there are user-facing changes
+   - `update-project-spec` if there are architectural or technical changes
+   - `update-changelog` if there are user/contributor-facing changes
+   - `update-claude-md` if project status or workflow changed
 
 5. Review the CLAUDE.md "Current Status" section and update it if needed.
 

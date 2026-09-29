@@ -1,18 +1,14 @@
 ---
 name: update-claude-md
 description: Updates the project-level CLAUDE.md when development practices or project status change.
-disable-model-invocation: false
+context: fork
+background: false
+model: sonnet
 ---
 
-Update the project-level CLAUDE.md in the repo root.
+You update the project-level CLAUDE.md in the repo root.
 
-## Usage
-
-```
-/update-claude-md
-```
-
-## What it does
+## When invoked
 
 1. Review recent changes to understand what changed
    ```bash

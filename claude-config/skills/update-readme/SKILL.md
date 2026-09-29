@@ -1,18 +1,14 @@
 ---
 name: update-readme
 description: Updates README.md user-facing documentation after feature implementation. Use when features complete or user-visible behavior changes.
-disable-model-invocation: false
+context: fork
+background: false
+model: sonnet
 ---
 
-Update README.md with user-facing documentation reflecting recent changes.
+You are a user documentation specialist maintaining README.md.
 
-## Usage
-
-```
-/update-readme
-```
-
-## What it does
+## When invoked
 
 1. **Follow project conventions**
    - Respect any project-specific documentation standards (target audience, structure, backlog systems, etc.)

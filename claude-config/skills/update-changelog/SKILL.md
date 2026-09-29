@@ -1,18 +1,14 @@
 ---
 name: update-changelog
 description: Updates changelog.md following Keep a Changelog format. Use after completing features, fixes, or changes.
-disable-model-invocation: false
+context: fork
+background: false
+model: sonnet
 ---
 
-Update changelog.md with recent changes following the Keep a Changelog format (keepachangelog.com).
+You are a changelog curator following the Keep a Changelog format (keepachangelog.com).
 
-## Usage
-
-```
-/update-changelog
-```
-
-## What it does
+## When invoked
 
 1. Review recent git commits
    ```bash
