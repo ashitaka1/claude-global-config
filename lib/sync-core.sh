@@ -103,7 +103,15 @@ compute_directory_checksum() {
 
     # Compute checksum of all files in directory using relative paths
     # This ensures identical content produces identical checksums regardless of location
-    (cd "$dir" && find . -type f -exec shasum -a 256 {} \; | sort | shasum -a 256 | awk '{print $1}')
+    # Excluded subtrees are skipped so a directory synced with --exclude still
+    # compares equal to its counterpart.
+    local prune=()
+    local pattern
+    for pattern in ${exclude_patterns:-}; do
+        prune+=(-name "${pattern%/}" -prune -o)
+    done
+    (cd "$dir" && find . "${prune[@]}" -type f -print0 \
+        | xargs -0 shasum -a 256 | sort | shasum -a 256 | awk '{print $1}')
 }
 
 files_differ() {
@@ -122,6 +130,18 @@ files_differ() {
     local checksum2=$(compute_checksum "$file2")
 
     [ "$checksum1" != "$checksum2" ]
+}
+
+count_directory_files() {
+    local dir="$1"
+    [ -d "$dir" ] || { echo 0; return; }
+
+    local prune=()
+    local pattern
+    for pattern in ${exclude_patterns:-}; do
+        prune+=(-name "${pattern%/}" -prune -o)
+    done
+    (cd "$dir" && find . "${prune[@]}" -type f -print | wc -l | tr -d ' ')
 }
 
 directories_differ() {
@@ -592,9 +612,12 @@ get_installed_plugins() {
     # Pattern 1: lines with ❯ marker
     # Pattern 2: lines starting with whitespace followed by plugin name
     # Pattern 3: JSON output if --json is supported
+    # Plugins from the "synced" marketplace are provisioned by claude.ai rather
+    # than installed from a marketplace, so install-plugins.sh cannot resolve
+    # them on another machine.
     echo "$output" | grep -E '^\s*(❯|•|-|\*)?\s*\S+@' | \
         sed -E 's/^[[:space:]]*(❯|•|-|\*)?[[:space:]]*//' | \
-        awk '{print $1}' | sort -u
+        awk '{print $1}' | grep -v '@synced$' | sort -u
 }
 
 # Get list of plugins from plugins.txt
@@ -710,7 +733,7 @@ pull_plugins() {
 
     # Get list of installed plugins
     local installed
-    installed=$(get_installed_plugins | grep -v '@synced$' || true)
+    installed=$(get_installed_plugins)
 
     if [ -z "$installed" ]; then
         echo -e "${YELLOW}⚠${NC}  No plugins installed"

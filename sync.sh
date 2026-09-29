@@ -126,19 +126,20 @@ cmd_status() {
         local source=$(extract_field "$entry" "source")
         local target=$(extract_field "$entry" "target")
         local name=$(extract_field "$entry" "name")
+        local exclude_patterns=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
 
         if directories_differ "$source" "$target"; then
             format_status_line "diverged" "$name" "DIVERGED"
 
             # Count files in each
-            local repo_count=$(find "$source" -type f 2>/dev/null | wc -l | tr -d ' ')
-            local live_count=$(find "$target" -type f 2>/dev/null | wc -l | tr -d ' ')
+            local repo_count=$(count_directory_files "$source")
+            local live_count=$(count_directory_files "$target")
 
             echo "  Repo:  $repo_count files"
             echo "  Live:  $live_count files"
             issues=$((issues + 1))
         else
-            local count=$(find "$source" -type f 2>/dev/null | wc -l | tr -d ' ')
+            local count=$(count_directory_files "$source")
             format_status_line "in-sync" "$name" "($count files)"
         fi
     done < <(get_sync_directories "$config_json")
@@ -210,6 +211,7 @@ cmd_diff() {
             local source=$(extract_field "$entry" "source")
             local target_path=$(extract_field "$entry" "target")
             local name=$(extract_field "$entry" "name")
+            local exclude_patterns=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
 
             if directories_differ "$source" "$target_path"; then
                 echo "─── $name ─────────────────────────────────────────────"
@@ -303,6 +305,7 @@ cmd_deploy() {
         local target=$(extract_field "$entry" "target")
         local name=$(extract_field "$entry" "name")
         local excl=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
+        local exclude_patterns="$excl"
         if directories_differ "$source" "$target"; then
             affected+=("dir:$source:$target:$name:$excl")
         fi
@@ -389,6 +392,7 @@ cmd_pull() {
         local target=$(extract_field "$entry" "target")
         local name=$(extract_field "$entry" "name")
         local excl=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
+        local exclude_patterns="$excl"
         if directories_differ "$target" "$source"; then
             affected+=("dir:$target:$source:$name:$excl")
             affected_names+=("$name")
