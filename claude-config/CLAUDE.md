@@ -23,6 +23,7 @@ NEVER make changes directly on main. Follow the development workflow.
 
 1. NEVER COMMIT TO MAIN.
 2. When developing solo, merge branches directly; when contributing to a repo use PRs.
+   - Fast-forward whenever possible. Create a merge commit only when history has diverged; never pass `--no-ff`, whatever the existing log looks like.
 3. **Branch naming:** Unless project specifies otherwise, use:
    - `<user>/feature-<feature-label>` for features
    - `<user>/fix-<fix-label>` for bug fixes
