@@ -81,9 +81,7 @@ If `ready-check` is defined, poll each environment (max ~60s). Report failures.
 
 ### Phase 5: Spawn Agents
 
-Follow agent-ops for worktree creation and agent spawning. Do NOT use `isolation: "worktree"`.
-
-Create all worktrees up front, then spawn each `bug-fixer` agent with `run_in_background: true`.
+Spawn each `bug-fixer` agent with `isolation: "worktree"` and `run_in_background: true`. The harness creates each worktree; the agent renames its own branch. See agent-ops for branch naming and cleanup.
 
 Each agent prompt must include (the agent is autonomous — no follow-up questions):
 - Self-navigation block and file path block (from agent-ops)

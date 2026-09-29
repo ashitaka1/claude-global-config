@@ -117,11 +117,41 @@
       "Read(~/.claude/skills/shared/**)",
       "Bash(xcodebuildmcp *)",
       "Bash(xcrun *)",
-      "Bash(~/.claude/scripts/worktree-git.sh *)",
+      "Bash(git -C *)",
       "Bash(viam *)"
     ]
   },
   "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
@@ -133,11 +163,70 @@
         ]
       },
       {
-        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $HOME/.claude/scripts/no-git-cd-chain.py"
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
           }
         ]
       }
@@ -149,20 +238,24 @@
     "padding": 0
   },
   "enabledPlugins": {
-    "commit-commands@claude-plugins-official": true,
-    "swift-lsp@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "explanatory-output-style@claude-plugins-official": false,
-    "learning-output-style@claude-plugins-official": false,
-    "gopls-lsp@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "explanatory-output-style@claude-plugins-official": false,
+    "feature-dev@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "learning-output-style@claude-plugins-official": false,
+    "playwright@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true
+    "swift-lsp@claude-plugins-official": false
   },
+  "tui": "fullscreen",
   "theme": "light",
   "remoteControlAtStartup": false,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "worktree": {
+    "baseRef": "head"
+  }
 }

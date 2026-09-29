@@ -31,7 +31,7 @@ NEVER make changes directly on main. Follow the development workflow.
 
 ### Git Commands
 
-- **Avoid targeting git at a different directory.** Both `cd <path> && git ...` and `git -C <path> ...` trigger approval prompts. When working in worktrees or subdirectories, prefer running git commands from within that directory (e.g., agents launched with worktree isolation should use plain `git` since they're already in the worktree).
+- **Use `git commit -F - <<'EOF'` for multi-line messages.** The `$(cat <<'EOF'...)` form triggers unnecessary approval prompts; command substitution defeats static permission matching.
 
 ### Commits
 
@@ -165,8 +165,8 @@ Before merging to main, verify the feature works in the target environment:
 
 1. **Run `/completion-check`** — runs tests, handles documentation updates, commits.
 2. Attempt to validate the application in a test environment. Follow any project directives for doing so.
-3. Use /end-feature to finalize the feature branch.
-4. Use /revise-claude-md
+3. Run `/revise-claude-md`.
+4. Stop and tell the user the branch is ready for `/end-feature`. That skill merges, pushes, and removes the worktree, and only the user invokes it.
 
 ---
 

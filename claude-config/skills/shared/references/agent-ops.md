@@ -1,6 +1,6 @@
 # Agent Operations Manual
 
-How agents work autonomously in worktrees — navigation, file operations, test environments, testing, QA, and committing. Skills that spawn agents include the relevant sections of this document in agent prompts.
+How agents work autonomously in worktrees — isolation, test environments, testing, QA, and committing. Skills that spawn agents include the relevant sections of this document in agent prompts.
 
 ---
 
@@ -70,58 +70,28 @@ Project-specific commands for UI inspection, interaction, and verification. Incl
 
 ---
 
-## Worktree Navigation
+## Worktree Isolation
 
-Background agents cannot reliably use `cd` to change directories (it does not persist between Bash tool calls). All git commands must use the `worktree-git.sh` wrapper script. File operations (Read, Edit, Write) must use full absolute worktree paths.
+Spawn agents with `isolation: "worktree"`. The harness creates the worktree under `<project-root>/.claude/worktrees/agent-<id>`, starts the agent inside it, and auto-cleans it if nothing changed. `.claude/` is already gitignored.
 
-### Self-Navigation Block
+Inside its worktree an agent uses plain `git` and ordinary relative paths. No wrapper script, no directory flag, no absolute-path discipline.
 
-Include this verbatim in every agent prompt, substituting `{absolute_worktree_path}` and `{branch_name}`:
+### Branch Naming
 
-```
-## CRITICAL: Working Directory and Git
-
-You are working in a git worktree. `cd` does NOT persist between Bash tool calls. You MUST follow these rules:
-
-**For git commands**, use the worktree-git wrapper (NEVER bare `git`, `cd && git`, or `git -C`):
-    ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} <git-args>
-
-**For file operations** (Read, Edit, Write), use full worktree paths:
-    {absolute_worktree_path}/Path/To/File.swift
-
-**For non-git Bash commands** that need to run in the worktree, use full paths in the command arguments (e.g., `ls {absolute_worktree_path}/some/dir`).
-
-Your FIRST action must be to verify your branch:
-    ~/.claude/scripts/worktree-git.sh {absolute_worktree_path} branch --show-current
-It must print `{branch_name}`. If not, stop and report the error.
-```
-
-### File Path Block
-
-The self-navigation block above covers file paths. No separate block needed.
-
----
-
-## Worktree Management (Coordinator)
-
-### Creating Worktrees
+The harness names the branch `worktree-agent-<id>`. An agent that owes the coordinator a specific branch renames it as its first action:
 
 ```bash
-git worktree add .worktrees/$WORKTREE_DIR -b $BRANCH_NAME
+git branch -m $BRANCH_NAME
 ```
 
-Where `$WORKTREE_DIR` is the branch name with `/` replaced by `-` (e.g., `user/fix-foo` becomes `user-fix-foo`).
+The rename is visible from the main checkout immediately. The coordinator finds the branch with `git branch --list` and the worktree with `git worktree list`.
 
-### Cleaning Up Worktrees
+### Cleanup (Coordinator)
 
-```bash
-git worktree remove .worktrees/$WORKTREE_DIR
-```
-
-If dirty or locked:
+An unchanged worktree is removed automatically. One holding commits persists, and is locked while its agent lives:
 
 ```bash
-rm -rf .worktrees/$WORKTREE_DIR
+git worktree remove --force .claude/worktrees/agent-<id>
 git worktree prune
 git branch -D $BRANCH_NAME
 ```
@@ -180,29 +150,21 @@ Before spawning agents, the coordinator must verify that the test environment co
 
 ### Agent Commit Checklist
 
-Spawned agents cannot use standalone `cd` (it does not persist between Bash tool calls) and `cd <dir> && git` / `git -C` are blocked. Use the **worktree-git wrapper** for all git operations:
+Run plain `git` from inside your worktree:
 
-```bash
-~/.claude/scripts/worktree-git.sh {absolute_worktree_path} <git-args...>
-```
+1. Verify branch: `git branch --show-current`
+2. Stage specific files: `git add <files>`
+3. Commit with conventions from config
+4. Verify commit: `git log --oneline -1`
 
 Examples:
 ```bash
-~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch status
-~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch add file1.swift file2.swift
-~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch commit -F - <<'EOF'
+git commit -F - <<'EOF'
 Commit message here
 
 Fixes #123
 EOF
-~/.claude/scripts/worktree-git.sh /path/to/.worktrees/my-branch branch --show-current
 ```
-
-Steps:
-1. Verify branch: `~/.claude/scripts/worktree-git.sh {worktree} branch --show-current`
-2. Stage specific files: `~/.claude/scripts/worktree-git.sh {worktree} add <files>`
-3. Commit with conventions from config
-4. Verify commit: `~/.claude/scripts/worktree-git.sh {worktree} log --oneline -1`
 
 ---
 
@@ -212,15 +174,13 @@ These Bash patterns trigger security prompts and must be avoided by both agents 
 
 - **One command per Bash call.** No newline-separated commands.
 - **No `$()` substitution.** Use two separate Bash calls instead.
-- **No `cd && git` or `cd; git` chains.** Blocked by hook. Use `worktree-git.sh` wrapper instead.
-- **No `git -C`.** Blocked by hook. Use `worktree-git.sh` wrapper instead.
 - **Parallel operations:** Multiple Bash calls in one message, not `&` and `wait`.
 
 ---
 
 ## Code Review
 
-After agents commit, the coordinator spawns code review agents. Pass the worktree path and instruct the reviewer to run `env -C <worktree_path> git diff main...HEAD`. Review findings become separate follow-up commits.
+After agents commit, the coordinator spawns code review agents. Spawn the reviewer with `isolation: "worktree"` on the agent's branch and have it run `git diff main...HEAD`. Review findings become separate follow-up commits.
 
 ---
 

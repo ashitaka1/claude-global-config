@@ -19,4 +19,4 @@ Commit code and clean up after a feature or fix branch, optionally merging to ma
 2. If the `push` argument is present, push the branch to the remote
 3. If the `merge` argument is present, merge the branch into main
 4. If the `main` argument is present, push main to the origin
-5. If the `clean` argument is present, clean up the current worktree and branch
+5. If the `clean` argument is present, call `ExitWorktree` to return the session to the original directory — `action: "remove"` once the work is merged, `action: "keep"` otherwise

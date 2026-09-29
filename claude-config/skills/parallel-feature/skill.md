@@ -167,7 +167,7 @@ Wait for approval. The user may want to sequence agents (Wave 1/Wave 2) if there
 
 ### Phase 6: Spawn Agents
 
-Follow agent-ops for worktree creation and spawning. Create all worktrees first, then spawn `bug-fixer` agents with `run_in_background: true`.
+Spawn `bug-fixer` agents with `isolation: "worktree"` and `run_in_background: true`. See agent-ops for branch naming and cleanup.
 
 Each agent prompt must include:
 - Self-navigation block and file path block (from agent-ops)
