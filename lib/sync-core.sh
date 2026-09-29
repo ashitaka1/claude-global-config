@@ -105,12 +105,16 @@ compute_directory_checksum() {
     # This ensures identical content produces identical checksums regardless of location
     # Excluded subtrees are skipped so a directory synced with --exclude still
     # compares equal to its counterpart.
+    # bash 3.2 ships on macOS and errors on "${arr[@]}" for an empty array under
+    # set -u. ${arr[@]+"${arr[@]}"} expands to nothing when empty. Without it the
+    # subshell dies, `local x=$(...)` swallows the status, and every directory
+    # compares equal.
     local prune=()
     local pattern
     for pattern in ${exclude_patterns:-}; do
         prune+=(-name "${pattern%/}" -prune -o)
     done
-    (cd "$dir" && find . "${prune[@]}" -type f -print0 \
+    (cd "$dir" && find . ${prune[@]+"${prune[@]}"} -type f -print0 \
         | xargs -0 shasum -a 256 | sort | shasum -a 256 | awk '{print $1}')
 }
 
@@ -141,7 +145,7 @@ count_directory_files() {
     for pattern in ${exclude_patterns:-}; do
         prune+=(-name "${pattern%/}" -prune -o)
     done
-    (cd "$dir" && find . "${prune[@]}" -type f -print | wc -l | tr -d ' ')
+    (cd "$dir" && find . ${prune[@]+"${prune[@]}"} -type f -print | wc -l | tr -d ' ')
 }
 
 directories_differ() {
@@ -158,6 +162,13 @@ directories_differ() {
 
     local checksum1=$(compute_directory_checksum "$dir1")
     local checksum2=$(compute_directory_checksum "$dir2")
+
+    # `local x=$(...)` discards the subshell's exit status, so a checksum that
+    # failed to compute arrives as an empty string and would compare equal to
+    # another empty one. Report different instead of silently in-sync.
+    if [ -z "$checksum1" ] || [ -z "$checksum2" ]; then
+        return 0
+    fi
 
     [ "$checksum1" != "$checksum2" ]
 }
@@ -387,7 +398,7 @@ sync_directory() {
     for pattern in ${exclude_patterns:-}; do
         rsync_excludes+=(--exclude "$pattern")
     done
-    rsync -a --delete "${rsync_excludes[@]}" "$source/" "$expanded_target/"
+    rsync -a --delete ${rsync_excludes[@]+"${rsync_excludes[@]}"} "$source/" "$expanded_target/"
     echo -e "${GREEN}✓${NC} Synced directory: $source → $expanded_target"
 }
 
