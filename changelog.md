@@ -24,6 +24,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Synced directory entries can declare `exclude` patterns (rsync excludes); used to keep the claude.ai-managed `skills/synced/` tree out of the repo
 
 ### Fixed
+- `/end-feature` leaves the worktree before merging — a worktree-isolated session cannot redirect git into the primary checkout, and main is already checked out there, so the merge step could never run for a branch started by `/start-feature`
+- `/end-feature clean` removes the worktree and branch with plain git rather than `ExitWorktree remove`, which refuses before the merge and tracks the pre-rename branch name
+- `/start-feature` derives the branch name once, so `fix-` arguments no longer produce `<user>/feature-fix-<label>`
+- `/start-feature` checks `git check-ignore` for `.claude/worktrees/` and adds it when missing, instead of assuming every repo ignores `.claude/`
+- `no-edit-main.py` allows edits to gitignored files on main, which cannot become commits; it was blocking scratch notes and `.claude/test-proposals/`
 - viam-claude/README.md: removed phantom skills, added missing ones, fixed install path
 - `claude-config/settings.sync.json` recovered 93 lines of live configuration it had never recorded, including nine status-line hook events, exposed once `pull` stopped aborting early
 - `sync.sh status`/`deploy`/`pull` no longer abort after the first changed item — `((count++))` returns the pre-increment value, which is falsy on a counter's first call, killing the run under `set -e`
