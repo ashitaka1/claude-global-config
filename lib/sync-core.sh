@@ -663,18 +663,20 @@ load_sync_state() {
 # ============================================================================
 
 # Get list of installed plugins (handles different output formats)
+# Plugins from the "synced" marketplace are provisioned by claude.ai rather than
+# installed from a marketplace, so install-plugins.sh cannot resolve them on
+# another machine.
 get_installed_plugins() {
     local output
-    output=$(claude plugin list 2>/dev/null) || return 1
 
-    # Try different patterns to extract plugin names
-    # Pattern 1: lines with ❯ marker
-    # Pattern 2: lines starting with whitespace followed by plugin name
-    # Pattern 3: JSON output if --json is supported
-    # Plugins from the "synced" marketplace are provisioned by claude.ai rather
-    # than installed from a marketplace, so install-plugins.sh cannot resolve
-    # them on another machine.
-    echo "$output" | grep -E '^\s*(❯|•|-|\*)?\s*\S+@' | \
+    if output=$(claude plugin list --json 2>/dev/null) && [ -n "$output" ]; then
+        echo "$output" | jq -r '.[].id' 2>/dev/null | grep -v '@synced$' | sort -u
+        return 0
+    fi
+
+    # Older CLIs have no --json; fall back to scraping the table.
+    output=$(claude plugin list 2>/dev/null) || return 1
+    echo "$output" | grep -E '^[[:space:]]*(❯|•|-|\*)?[[:space:]]*[^[:space:]]+@' | \
         sed -E 's/^[[:space:]]*(❯|•|-|\*)?[[:space:]]*//' | \
         awk '{print $1}' | grep -v '@synced$' | sort -u
 }
