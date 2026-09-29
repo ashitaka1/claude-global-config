@@ -131,7 +131,8 @@ files:
 
 **Key Decisions:**
 - Agents run with `isolation: "worktree"`; the harness creates the worktree under `.claude/worktrees/agent-<id>` and removes it if nothing changed
-- `/start-feature` calls `EnterWorktree`, which moves the session's working directory; `/end-feature clean` calls `ExitWorktree`
+- `/start-feature` calls `EnterWorktree`, which moves the session's working directory
+- `/end-feature` calls `ExitWorktree` with `keep` *before* merging, because a worktree-isolated session cannot reach the primary checkout; cleanup afterwards is plain `git worktree remove` and `git branch -d`
 - An agent owing the coordinator a specific branch renames its own with `git branch -m`
 - `worktree.baseRef` set to `head`, so worktrees fork from local work rather than `origin/<default-branch>`
 
@@ -158,7 +159,9 @@ files:
 ## Implementation Notes
 
 ### Worktree Placement
-Worktrees live under `.claude/worktrees/`, which is already covered by the `.claude/` entry in `.gitignore`. The harness names agent worktrees after the agent id.
+Worktrees live under `.claude/worktrees/`. This repo covers that with its `.claude/` entry in `.gitignore`, but most repos do not, so `/start-feature` checks with `git check-ignore` and appends the entry when it is missing. The harness names agent worktrees after the agent id.
+
+`EnterWorktree` does not use its `name` argument as the branch name: it replaces `/` with `+` and prefixes `worktree-`. `/start-feature` renames the branch afterwards, which leaves `ExitWorktree` reporting a branch that no longer exists — the reason cleanup uses plain git rather than `ExitWorktree remove`.
 
 ### Sync Config Discipline
 When adding new files to deploy, always update `.sync-config.yaml` rather than hardcoding paths in shell scripts. This keeps the sync system maintainable and self-documenting.
