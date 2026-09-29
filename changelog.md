@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Synced directory entries can declare `exclude` patterns (rsync excludes); used to keep the claude.ai-managed `skills/synced/` tree out of the repo
 
 ### Fixed
+- `sync.sh` compared every directory as identical under bash 3.2, the version macOS ships: `"${arr[@]}"` on an empty array is an unbound variable under `set -u`, which killed the checksum subshell, and `local x=$(...)` discarded the failure. `status` reported everything synchronized and `pull`/`deploy` skipped all directories
+- `directories_differ` reports a difference when a checksum comes back empty, rather than treating two failed computations as a match
 - `/end-feature` leaves the worktree before merging — a worktree-isolated session cannot redirect git into the primary checkout, and main is already checked out there, so the merge step could never run for a branch started by `/start-feature`
 - `/end-feature clean` removes the worktree and branch with plain git rather than `ExitWorktree remove`, which refuses before the merge and tracks the pre-rename branch name
 - `/start-feature` derives the branch name once, so `fix-` arguments no longer produce `<user>/feature-fix-<label>`
