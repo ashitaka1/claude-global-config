@@ -31,8 +31,8 @@ This project provides a global configuration system for Claude Code, enabling co
 ### Required
 - Bidirectional sync system for deploying configuration
 - Global development standards (CLAUDE.md)
-- Workflow automation agents (pre-work-check, completion-checker, etc.)
-- Documentation updater agents (readme-updater, changelog-updater, etc.)
+- Workflow automation agents (pre-work-check, test-scrutinizer, etc.)
+- Documentation updater skills (update-readme, update-changelog, etc.)
 - Slash commands for common workflows
 - Settings management
 - Project templates

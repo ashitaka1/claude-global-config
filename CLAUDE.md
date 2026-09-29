@@ -41,7 +41,7 @@ claude-config/          # Canonical source for global config
   CLAUDE.md             # Global CLAUDE.md (deployed to ~/.claude/)
   agents/               # Workflow agents (deployed to ~/.claude/agents/)
   scripts/              # Shell scripts (deployed to ~/.claude/scripts/)
-    api_key_helper.sh   # 1Password API key helper
+    no-edit-main.py     # PreToolUse hook blocking edits on the main branch
     statusline.sh       # Status line with model, git, context bar
     terminal-color.sh   # Per-session TTY-based color theming
   skills/               # Slash commands (deployed to ~/.claude/skills/)

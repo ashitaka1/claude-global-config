@@ -9,7 +9,7 @@ Global configuration and reusable components for Claude Code development workflo
 - **CLAUDE.md** - Global development standards, workflow, and testing philosophy (deployed to `~/.claude/CLAUDE.md`)
 - **settings.sync.json** - Pre-approved permissions for safe commands, includes hook to prevent accidental edits on main
 - **scripts/** - Shell utilities (deployed to `~/.claude/scripts/`)
-  - `api_key_helper.sh` - API key management helper
+  - `no-edit-main.py` - PreToolUse hook blocking edits on the main branch
   - `statusline.sh` - Status line with model, git status, sync state, context bar
   - `terminal-color.sh` - Per-session TTY-based color theming
 
@@ -17,18 +17,20 @@ Global configuration and reusable components for Claude Code development workflo
 
 Workflow automation agents:
 
+- `bug-fixer` - Implement a fix, run tests, QA, and commit in its own worktree
 - `pre-work-check` - Verify branch and tests before starting work
+- `test-expert` - Plan and review unit tests
 - `test-scrutinizer` - Two-phase test plan review
-- `readme-updater` - Update user documentation
-- `claude-md-updater` - Update project-level workflow documentation
-- `project-spec-updater` - Update technical documentation
-- `changelog-updater` - Maintain changelog
-- `completion-checker` - Pre-merge quality gate
-- `retro-reviewer` - Workflow optimization
 
 ### Skills (`claude-config/skills/`)
 
-- `/start-feature <name>` - Create worktree with feature branch and launch guided development
+- `/start-feature <name>` - Create a worktree with a feature branch and launch guided development
+- `/completion-check` - Pre-merge checklist: tests, documentation, commit
+- `/end-feature [push] [merge] [main] [clean]` - Commit, merge, push, and leave the worktree
+- `/parallel-fix`, `/parallel-feature` - Fan work out across isolated worktrees
+- `/update-readme`, `/update-changelog`, `/update-project-spec`, `/update-claude-md` - Documentation updaters, each forked into its own context
+- `/retro` - Review workflow and suggest improvements
+- `/transcribe`, `/ssh-mcp`, `/script-writer`, `/xcodebuildmcp-cli` - Standalone tools
 
 ### Templates (`templates/`)
 
