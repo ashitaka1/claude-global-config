@@ -198,11 +198,6 @@ Parses `claude plugin list` output with: `grep -E '^\s+❯' | awk '{print $2}'`
 
 This depends on exact CLI output format. Should use more robust parsing or handle format changes gracefully.
 
-### Sync dry-run does not enumerate directory contents
-**Location:** `sync.sh` in `sync_directory()`
-
-A dry-run prints `Would sync directory` without listing the files it would add or delete, so deletions cannot be previewed. The real run takes a backup first, but the preview is not actionable.
-
 ### No test suite
 The project consists primarily of shell scripts but has no automated tests. Validation is manual via `./sync.sh status`. Consider adding basic integration tests.
 
