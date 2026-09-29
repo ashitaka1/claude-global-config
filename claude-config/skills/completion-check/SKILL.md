@@ -49,6 +49,6 @@ When invoked:
 
 5. Review the CLAUDE.md "Current Status" section and update it if needed.
 
-6. Stage and commit any changes from documentation updates with an appropriate commit message.
+6. Stage and commit any changes from documentation updates. Write the message per **Writing → Commit messages**.
 
 7. Report the final status: tests passing, docs updated, branch ready.

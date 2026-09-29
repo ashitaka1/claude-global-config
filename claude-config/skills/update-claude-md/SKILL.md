@@ -35,8 +35,9 @@ Update the project-level CLAUDE.md in the repo root.
 
 ## Guidelines
 
-- Keep it lean — this file is for project-specific context only
-- Link to `project_spec.md` for details rather than duplicating content here
+Write per **Writing**. CLAUDE.md-specific:
+
+- Project-specific context only. Link to `project_spec.md` rather than duplicating it here.
 
 ## Output
 

@@ -43,7 +43,7 @@ xcodebuild test ... --simulator-name "$RESOURCE"
 
 #### Commit Conventions
 
-How to format commit messages. Includes `issue-reference` template (with `$ISSUE` placeholder) and `guidelines` for the message body.
+Project-specific commit deltas. The message itself follows **Writing → Commit messages**; this block supplies the `issue-reference` template (with `$ISSUE` placeholder) and, in `guidelines`, only what this project does differently.
 
 ```
 issue-reference: "Fixes $ISSUE"

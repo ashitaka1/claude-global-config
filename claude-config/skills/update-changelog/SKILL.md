@@ -35,21 +35,13 @@ Update changelog.md with recent changes following the Keep a Changelog format (k
 
 ## Guidelines
 
-- Use present tense ("Add feature" not "Added feature")
-- Be concise but specific about what changed and why it matters to users
-- Group related changes together
-- Link to issues/PRs if applicable
-- One entry per logical change, not per commit
-- **Exclude `.claude/` and CLAUDE.md changes** — internal tooling is not part of the project changelog
-- **Exclude project_spec.md changes** — internal planning, not user-facing
-- Focus on changes that affect users or contributors
+Write per **Writing**. Changelog-specific:
 
-## What NOT to include
-
-- Workflow changes (unless they affect contributors)
-- Documentation updates that don't reflect feature changes
-- Internal refactoring that doesn't change behavior
-- Development tooling changes
+- Present tense: "Add feature", not "Added feature".
+- One entry per logical change, not per commit. Group related changes.
+- Link issues and PRs where they exist.
+- Exclude `.claude/`, CLAUDE.md, and project_spec.md changes — internal tooling and planning.
+- Exclude internal refactoring that leaves behavior unchanged, development tooling changes, and documentation updates that don't track a feature change.
 
 ## Output
 

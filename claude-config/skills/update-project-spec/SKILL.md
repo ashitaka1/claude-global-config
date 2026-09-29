@@ -43,8 +43,8 @@ Update project_spec.md with technical and architectural information from recent 
 - Capture workarounds and their rationale
 
 ### Milestone Architecture Decisions
-- When a milestone completes, document key architectural decisions made
-- Capture the approach chosen and alternatives considered
+- When a milestone completes, record the architectural decisions it settled
+- Give the decision, the alternatives, and what distinguished them
 
 ### Technical Architecture
 - Update if components changed
@@ -53,9 +53,11 @@ Update project_spec.md with technical and architectural information from recent 
 
 ## Guidelines
 
-- Include file references (e.g., "in src/module.go:42")
-- Be specific about what changed and why
-- Remove resolved questions and paid-off debt promptly
+Write per **Writing**. Spec-specific:
+
+- Cite file references (`src/module.go:42`).
+- Remove resolved questions and paid-off debt as you go.
+- Milestone architecture decisions are decision records — the one section where alternatives belong. Give the decision, the alternatives, and what distinguished them.
 
 ## Output
 

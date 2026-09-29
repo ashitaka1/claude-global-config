@@ -39,22 +39,11 @@ Update README.md with user-facing documentation reflecting recent changes.
 
 ## Guidelines
 
-- **Target audience**: Users and developers learning to USE the project (not work ON it)
-- Keep examples current and executable
-- Test command-line examples if possible before documenting them
-- Use clear, simple language
-- Show real-world use cases
-- Focus on WHAT users can do, not HOW it's implemented
-- If it's about internal architecture, it belongs in project_spec.md
-- If it's about development workflow, it belongs in CLAUDE.md
+Write per **Writing**. The **Writing → Documentation** table gives the audience and the routing for content belonging in another file. README-specific:
 
-## What NOT to do
-
-- Don't document features that don't exist yet
-- Don't explain internal implementation details (that's for code comments or project_spec.md)
-- Don't document development workflow (that's CLAUDE.md)
-- Don't document technical debt or open questions (that's project_spec.md)
-- Don't duplicate information that's better suited for API docs or inline help
+- Run command-line examples before you document them.
+- Document what exists. A feature not yet built has no README entry.
+- Show real use cases rather than synthetic ones.
 
 ## Output
 

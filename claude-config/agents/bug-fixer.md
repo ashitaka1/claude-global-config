@@ -23,7 +23,7 @@ You will receive a structured assignment containing:
 - **qa_tactics**: Reusable testing tactics (e.g., fixture selection, speed-run recipes). Consult this before inventing your own approach to navigating the app.
 - **commit_conventions**: How to format the commit message. Contains:
   - `issue_reference`: The exact string to include for issue closing (e.g., `Fixes #6`)
-  - `guidelines`: Rules for the descriptive part of the message (style, length, etc.)
+  - `guidelines`: Optional project overrides. The message itself follows **Writing → Commit messages**; these only override it.
 - **project_context**: Any additional project conventions (from CLAUDE.md)
 
 ## Pipeline
@@ -94,8 +94,8 @@ If a test item fails but appears unrelated to your change (pre-existing issue), 
 
 ### Step 6: Commit
 
-Write a commit message following the conventions in your assignment:
-- Write a concise description of what you fixed and why, following the `guidelines`.
+Write the message per **Writing → Commit messages**, then apply any `guidelines` overrides from your assignment.
+
 - Include the `issue_reference` string exactly as provided.
 
 ```bash

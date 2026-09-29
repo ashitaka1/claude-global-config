@@ -11,20 +11,6 @@ NEVER make changes directly on main. Follow the development workflow.
 - Always use environment variables for secrets
 - Never commit .env.local or any file with API Keys
 
-### Self-documenting code > comments
-- Not every loop or block needs a comment explaining what it's for
-- Use clear naming and expressive code to make the intention clear
-- Reasons to comment:
-    - Code transitions from business logic to domain-specific algorithm. In which case, begin with a comment explaining the purpose and listing any references (like an ISO/ANSI number or published paper). Examples include (but are not limited to):
-        - Graphics or other spatial computation
-        - Cryptography
-        - Video, audio, compression
-        - Physics simulation
-    - Use of a language feature related hack (such as `if true { // comment` to label loops in Go)
-    - Code is expected to cause a known, non-local side-effect with a serious impact to the application
-    - Other knowingly performed hackery. Explain the hack in the comment.
-    - Placeholders for future planned code *for the current feature, change, or fix that will wind up in a merge or pull request*
-
 ### Tests
 - Only test meaningful behavior and our own logic
 - Vet your tests for failure modes:
@@ -53,26 +39,74 @@ NEVER make changes directly on main. Follow the development workflow.
 2. Only commit passing tests.
 3. When tests exist, commit them with the features they test.
 
-#### Commit messages
+## Writing
 
-The audience is contributors reading `git log` — typically running `git blame` on a confusing line, hunting a regression, or scanning recent history. Write for them. Not for the end user, not as release notes, not as a record of our conversation.
+These rules govern written artifacts — code comments, commit messages, pull request descriptions, and documentation. They do not govern conversation.
 
-  1. **Default to subject-only.** A body earns its place only when it answers a *why* the diff cannot — a hidden constraint, a non-obvious technical cause, or an architectural decision a contemporary reviewer would otherwise puzzle over. Test each candidate line: would a developer running `git blame` on this code months from now be confused without it? If no, cut.
+### How to write
 
-     Never produce:
-     - **Bug narrative.** Symptoms, reproduction, operator-perceived behavior — issue-tracker material, not commit material.
-     - **Pitch tone.** "Now possible", "X is optional", "use this when", "no longer requires", "lets you".
-     - **Listings of absences.** "No DHCP proxy, no TFTP — only X." Describe what the code does, not what it avoids.
-     - **Restatements of the diff.** If a line re-narrates what the new code does, it carries no signal the diff doesn't already.
-     - **Anything outside the diff.** Our conversation, alternatives you tried, project events ("hackathon-ready"), decorative ticket references. (Functional trailers like `Closes #45` that drive issue automation are fine — they're part of the change.) The commit describes the change, not its circumstances.
+**Register.** Write to a colleague across a desk. The reader already wants the information and will decide what it's worth.
 
-  2. Do not include a co-author message.
+**Assume the reader is attentive and already convinced.** Write the claim and let the sentence end. A reader holding the claim needs no complement, no benchmark, no emphasis; supplying them says you expect them to miss the point or doubt it.
 
-  3. Use `git commit -F - <<'EOF'` for multi-line messages. The `$(cat <<'EOF'...)` form triggers unnecessary approval prompts.
+**No sentence says its claim twice.** A second half that completes, contrasts, or benchmarks the first is the claim restated. State it once and move on. A negative claim is fine where the absence is the content — *the file is never written to disk* — and is not fine where it's the shadow of something already said.
 
-## Documentation Standards
+That gives you:
 
-- As with commits, do not annotate documentation with history of our conversation that do not add clarity. For example, if we discuss an alerting feature that includes an image, and later we decide to cut images from scope, do not annotate the feature with "(no images)".
+- Say what a thing is. *The endpoint returns JSON* is finished; the reader supplies *rather than XML*.
+- Say the property or the figure. *The job takes four minutes.* *The list is alphabetical.* With no figure, name the property and leave it unranked.
+- Say the word. *It works.* *The cost.* *The deadline.*
+- Say the finding. No sentence whose job is to set up the next one, none whose job is to characterize the one before, no paragraph announcing what a section contains.
+- Start at the content. There's no approach to write.
+
+**Record the decision alone.** An option you considered and dropped feels like content because ruling it out cost you something. The reader needs the choice; the field you cleared to reach it is your working and it stays out. Decision records are the exception — there the alternatives are the genre's content.
+
+**When you can't say what a thing is without saying what it isn't, you don't have the claim yet.** Work it out before writing the sentence rather than writing around the gap.
+
+**Nothing the reader can already see.** A line that re-narrates the diff, the code above it, or the section it heads carries no signal the reader doesn't already hold.
+
+**Nothing from outside the artifact.** Our conversation, the approaches you abandoned, project events ("hackathon-ready"), decorative ticket references. The artifact describes its subject, not its circumstances.
+
+**No pitch.** "Now possible", "no longer requires", "lets you", "use this when". Nobody is being sold. Say what the thing does.
+
+### Code comments
+
+Clear naming and expressive code carry the intention; not every loop or block needs a comment. A comment earns its place when:
+
+- Code transitions from business logic to a domain-specific algorithm. Open with the purpose and cite the reference — an ISO/ANSI number, a published paper. Graphics and other spatial computation, cryptography, video, audio, compression, physics simulation.
+- A language-feature hack needs a label, such as `if true { // comment` to label loops in Go.
+- The code causes a known non-local side effect with serious impact on the application.
+- Other knowing hackery. Explain the hack.
+- A placeholder marks planned code for the current feature, change, or fix.
+
+### Commit messages
+
+Audience: a contributor reading `git log` — running `git blame` on a confusing line, hunting a regression, scanning recent history. Not the end user, not release notes.
+
+**Default to subject-only.** A body earns its place only when it answers a *why* the diff cannot: a hidden constraint, a non-obvious technical cause, an architectural decision a contemporary reviewer would puzzle over. Test each candidate line — would a developer running `git blame` on this code months from now be confused without it? If no, cut.
+
+**Match the repo's log.** Check `git log --oneline` before committing and write the subject in the prevailing style: ticket key format if the work has an associated issue key (`APP-1234:` vs `[APP-1234]` vs bare), mood and capitalization, and — most of all — parsimony. If surrounding subjects are terse, yours must be too; don't out-write the log.
+
+**No bug narrative.** Symptoms, reproduction steps, operator-perceived behavior are issue-tracker material.
+
+Functional trailers that drive issue automation (`Closes #45`) are part of the change and belong in the message. Do not include a co-author line.
+
+### Pull request descriptions
+
+Audience: a reviewer deciding whether the change is correct. They have the diff and the commit log. Give them what neither holds — the constraint that forced this shape, what to exercise to see it work, and the risk they should weigh.
+
+### Documentation
+
+Each file has one audience. Content belonging to another audience goes to that file.
+
+| File | Audience | Content |
+|------|----------|---------|
+| `README.md` | someone learning to use the project | what it does, how to install and run it, how to configure it |
+| `project_spec.md` | someone working on the project | architecture, data schemas, implementation notes, technical debt, open questions, decision records |
+| `CLAUDE.md` | Claude, working in this repo | project status, test and build commands, workflow overrides |
+| `changelog.md` | users and contributors tracking releases | one entry per logical change, categorized |
+
+A decision record is the one place alternatives belong: the decision, the alternatives, and what distinguished them. Everywhere else, record the decision alone.
 
 ---
 
