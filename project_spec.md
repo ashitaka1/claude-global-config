@@ -184,20 +184,6 @@ This required careful shell scripting to handle errors gracefully and avoid bloc
 
 ## Technical Debt
 
-### Platform-specific `stat` command
-**Location:** `lib/sync-core.sh` in `format_file_details()`
-
-Uses macOS syntax: `stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file"`
-
-GNU stat (Linux) uses different flags. Need platform detection and conditional syntax.
-
-### Plugin list parsing fragility
-**Location:** `lib/sync-core.sh` in plugin sync functions
-
-Parses `claude plugin list` output with: `grep -E '^\s+❯' | awk '{print $2}'`
-
-This depends on exact CLI output format. Should use more robust parsing or handle format changes gracefully.
-
 ### No test suite
 The project consists primarily of shell scripts but has no automated tests. Validation is manual via `./sync.sh status`. Consider adding basic integration tests.
 

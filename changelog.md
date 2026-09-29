@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Changed
+- `sync.sh` reads the installed plugin list from `claude plugin list --json` rather than scraping the table output, falling back to the scrape on CLIs without `--json`
 - `install.sh` now installs dependencies then runs `sync.sh deploy` instead of printing manual next steps
 - Documented `.sync` suffix naming convention in README-SYNC.md
 - Consolidated shell scripts into `claude-config/scripts/` directory (was individual files at `claude-config/` root)
