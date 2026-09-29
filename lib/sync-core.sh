@@ -849,6 +849,15 @@ classify_file() {
         fi
         return
     fi
+        local exclude_patterns=$(echo "$entry" | jq -r '(.exclude // []) | join(" ")')
+
+        # Collect all files from both sides to catch additions/deletions.
+        # Excluded subtrees stay out, the same as sync_directory's rsync.
+        local prune=()
+        local pattern
+        for pattern in ${exclude_patterns:-}; do
+            prune+=(-name "${pattern%/}" -prune -o)
+        done
 
     # File deleted on one side
     if [ "$repo_checksum" = "MISSING" ]; then
