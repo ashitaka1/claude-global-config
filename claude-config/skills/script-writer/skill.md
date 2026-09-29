@@ -1,7 +1,6 @@
 ---
 name: script-writer
 description: Walk through the demo outline interactively, building chapters and maintaining the presenter script. Use when continuing demo development work — picking up where the last session left off.
-disable-model-invocation: false
 ---
 
 Resume interactive demo development for the Viam demo module project.

@@ -1,7 +1,6 @@
 ---
 name: start-feature
 description: Create and switch to a new feature branch, then begin guided feature development
-disable-model-invocation: false
 argument-hint: feature-name
 ---
 

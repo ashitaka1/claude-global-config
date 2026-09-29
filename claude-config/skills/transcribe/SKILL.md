@@ -1,7 +1,6 @@
 ---
 name: transcribe
 description: Transcribe audio files with speaker diarization using WhisperX. Use when the user wants to transcribe audio, get meeting notes, identify speakers in a recording, or process any audio/video file into text.
-disable-model-invocation: false
 argument-hint: <audio-file> [--speakers N]
 allowed-tools: Bash(~/.claude/skills/transcribe/run.sh *) Read
 ---

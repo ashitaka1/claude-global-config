@@ -1,7 +1,7 @@
 ---
 name: parallel-feature
 description: Design features interactively in series, then implement them in parallel. Combines feature-dev style discovery and architecture (with user input on each feature) with parallel autonomous implementation. Use when implementing multiple independent features, enhancements, or substantial changes that each need design decisions before coding. Also use when the user wants to batch several issues that are too complex for a simple bug fix.
-disable-model-invocation: false
+disable-model-invocation: true
 argument-hint: <issue-identifiers, feature descriptions, or nothing for interactive>
 ---
 

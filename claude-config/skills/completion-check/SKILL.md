@@ -1,7 +1,6 @@
 ---
 name: completion-check
 description: Pre-merge/PR checklist for feature branches. Ensures all workflow steps completed before merge.
-disable-model-invocation: false
 ---
 
 Verify that the current feature branch is ready to merge or to have a PR submitted.

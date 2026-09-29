@@ -1,7 +1,7 @@
 ---
 name: parallel-fix
 description: Coordinate parallel bug fixes across isolated worktrees with dedicated test environments. Spawns bug-fixer agents that independently implement, test, and commit fixes. Use when fixing multiple independent bugs, or when the user invokes /parallel-fix.
-disable-model-invocation: false
+disable-model-invocation: true
 argument-hint: <issue-identifiers or description>
 ---
 

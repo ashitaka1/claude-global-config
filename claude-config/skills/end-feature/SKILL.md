@@ -1,7 +1,7 @@
 ---
 name: end-feature
 description: Commit code and clean up
-disable-model-invocation: false
+disable-model-invocation: true
 argument-hint: [push] [merge] [main] [clean]
 ---
 
