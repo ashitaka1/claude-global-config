@@ -258,9 +258,13 @@
     "environment": [
       "$defaults",
       "**Primary use of Claude Code**: software development, mostly Viam robotics modules and personal tooling",
-      "**Source control**: GitHub; the user is `ashitaka1`, and branches named `ashitaka1/feature-<label>` or `ashitaka1/fix-<label>` in the trusted repo are routine to create, commit to, and push",
+      "**Source control** (extends the default): repos named in the session repo's CLAUDE.md are inside the trust boundary alongside the session's repo; public ones are still public for publication rules",
       "**Org-specific CLIs**: `gh` (GitHub), `viam` (Viam CLI for modules, machine config, and fleet management)",
       "**Trusted internal domains**: `app.viam.com` and the Viam API hosts the `viam` CLI and SDKs talk to"
+    ],
+    "allow": [
+      "$defaults",
+      "Project Issue Work: Working with GitHub issues in the session's repo, or in a repo named in the session repo's CLAUDE.md, is routine project work, not an External System Write. Covers creating issues; commenting on them; editing their title, body, labels, assignees, and milestone; closing and reopening them; closing keywords (e.g. `Closes #N`) for those issues in commits and PRs; and adding or updating those issues as items on the owner's GitHub Projects. Does not cover deleting or transferring issues, locking conversations, or editing or deleting comments written by other people."
     ]
   }
 }
