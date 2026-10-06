@@ -260,7 +260,7 @@
       "**Primary use of Claude Code**: software development, mostly Viam robotics modules and personal tooling",
       "**Source control** (extends the default): repos named in the session repo's CLAUDE.md are inside the trust boundary alongside the session's repo; public ones are still public for publication rules",
       "**Org-specific CLIs**: `gh` (GitHub), `viam` (Viam CLI for modules, machine config, and fleet management)",
-      "**Trusted internal domains**: `app.viam.com` and the Viam API hosts the `viam` CLI and SDKs talk to"
+      "**Trusted internal domains** (replaces the default): `*.viam.com` (Viam app, API, and Go SDK) and `*.viam.cloud` (the user's Viam machines)"
     ],
     "allow": [
       "$defaults",
