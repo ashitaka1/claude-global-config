@@ -6,6 +6,8 @@ This file provides global guidance to Claude Code (claude.ai/code) across all pr
 
 NEVER make changes directly on main. Follow the development workflow.
 
+The one exception: when the user's prompt contains `!onmain`, editing and committing on main is allowed for the rest of that session. Only the user supplies it; never suggest it.
+
 ### Security
 - Always run tests before committing
 - Always use environment variables for secrets
@@ -21,7 +23,7 @@ NEVER make changes directly on main. Follow the development workflow.
 
 ### Branches
 
-1. NEVER COMMIT TO MAIN.
+1. NEVER COMMIT TO MAIN, unless the user has supplied `!onmain` this session.
 2. When developing solo, merge branches directly; when contributing to a repo use PRs.
    - Fast-forward whenever possible. Create a merge commit only when history has diverged; never pass `--no-ff`, whatever the existing log looks like.
 3. **Branch naming:** Unless project specifies otherwise, use:

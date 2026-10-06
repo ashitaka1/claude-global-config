@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- `!onmain` in a prompt allows editing and committing on main for the rest of that session; `no-edit-main.py` records it from a `UserPromptSubmit` hook
+
 ### Changed
 - Test plans are an index plus one block per test (name, category, checks, why) with closing sections for untested items, changed existing tests, and manual validation. Plans follow rules for test names, harm-based justifications, injected clocks, deterministic concurrency tests, and state-then-events-then-return assertion order
 - `test-expert` writes plans in the new format and does not justify tests by the decision they defend

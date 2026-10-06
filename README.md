@@ -9,7 +9,7 @@ Global configuration and reusable components for Claude Code development workflo
 - **CLAUDE.md** - Global development standards, workflow, and testing philosophy (deployed to `~/.claude/CLAUDE.md`)
 - **settings.sync.json** - Pre-approved permissions for safe commands, includes hook to prevent accidental edits on main
 - **scripts/** - Shell utilities (deployed to `~/.claude/scripts/`)
-  - `no-edit-main.py` - PreToolUse hook blocking edits on the main branch
+  - `no-edit-main.py` - Hook blocking edits on the main branch. Type `!onmain` in a prompt to allow editing and committing on main for the rest of that session
   - `statusline.sh` - Status line with model, git status, sync state, context bar
   - `terminal-color.sh` - Per-session TTY-based color theming
 
