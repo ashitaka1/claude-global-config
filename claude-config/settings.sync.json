@@ -56,7 +56,6 @@
       "Bash(yarn *)",
       "Bash(pnpm *)",
       "Bash(bun *)",
-      "Bash(python*)",
       "Bash(pip*)",
       "Bash(poetry *)",
       "Bash(pytest *)",
@@ -71,7 +70,6 @@
       "Bash(kubectl *)",
       "Bash(curl *)",
       "Bash(wget *)",
-      "Bash(ssh *)",
       "Bash(scp *)",
       "Bash(rsync *)",
       "Bash(tar *)",
@@ -85,7 +83,6 @@
       "Bash(stat *)",
       "Bash(du *)",
       "Bash(df *)",
-      "Bash(env *)",
       "Bash(printenv *)",
       "Bash(date *)",
       "Bash(cal *)",
@@ -102,10 +99,8 @@
       "Bash(yq *)",
       "Bash(base64 *)",
       "Bash(openssl *)",
-      "Bash(bash -n *)",
       "Bash(test -f *)",
       "Bash(command -v *)",
-      "Bash(chmod *)",
       "Bash(git worktree *)",
       "Bash(git config --get *)",
       "Bash(git config --get-all *)",
@@ -121,6 +116,7 @@
       "Bash(viam *)"
     ]
   },
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -232,6 +228,9 @@
       }
     ]
   },
+  "worktree": {
+    "baseRef": "head"
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh",
@@ -255,7 +254,13 @@
   "theme": "light",
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
-  "worktree": {
-    "baseRef": "head"
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "**Primary use of Claude Code**: software development, mostly Viam robotics modules and personal tooling",
+      "**Source control**: GitHub; the user is `ashitaka1`, and branches named `ashitaka1/feature-<label>` or `ashitaka1/fix-<label>` in the trusted repo are routine to create, commit to, and push",
+      "**Org-specific CLIs**: `gh` (GitHub), `viam` (Viam CLI for modules, machine config, and fleet management)",
+      "**Trusted internal domains**: `app.viam.com` and the Viam API hosts the `viam` CLI and SDKs talk to"
+    ]
   }
 }
