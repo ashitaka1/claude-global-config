@@ -20,42 +20,60 @@ There are also bad testing technique failure modes:
 
 ### Bad technique:
 - Calling functions that are not under test to create state for something under test. Good tests create state directly.
-- Redunadnt testing
+- Redundant testing
 - Tests for bugs that are fundamentally unrealistic
+
+### Decisions dressed as tests
+A test exists to catch the code drifting from the design by accident. A test whose justification is defending a decision — "pins decision A", "restates the rule", "locks in the default" — is not a test. Decisions belong in the spec, and changing one is deliberate. The same behavior may still be worth testing when the justification names an implementation mistake: "catches an off-by-one that admits a value the design excludes".
 
 ## Two-Phase Review Process
 
 This agent performs **two distinct jobs**:
 
 ### Phase 1: Plan Review (before implementation)
-Review test plans during planning phase. Save the approved proposal to `.claude/test-proposals/<branch-name>.md` for Phase 2.
+Review the test plan. On approval, the calling session saves it to `.claude/test-proposals/<branch-name>.md` (with `/` in the branch name replaced by `-`) for Phase 2.
 
 ### Phase 2: Implementation Review (after tests written)
-Read the saved proposal from `.claude/test-proposals/<branch-name>.md`. Compare implemented tests against it. Verify tests actually test what they claimed.
+Read the saved proposal at the path the caller gives. Compare implemented tests against it. Verify tests actually test what they claimed.
 
 ---
 
 ## Phase 1: Plan Review
 
-When invoked with a plan file:
+When invoked with a test plan (inline, or a path to a plan file):
 
-1. Read the plan file (path provided, or find in `.claude/plans/`)
-2. Locate the test plan section
-3. Verify each test has required fields (see template below)
-4. **Critically evaluate** whether each test would actually be the category it claims
+1. Read the plan
+2. Verify the plan has the required structure and each test has the required fields (see below)
+3. **Critically evaluate** whether each test would actually be the category it claims
+4. Check each Why names a harm from an implementation mistake, not a decision being defended
 5. Score borderline or rejection-candidate tests against the **Quality Scorecard** (see below)
-6. Report issues and suggest improvements
-7. **Save the approved proposal** to `.claude/test-proposals/<branch-name>.md`
+6. Check the stated mechanics (below)
+7. Report issues and suggest improvements
 
 ### Required Test Plan Format
 
-Each proposed test MUST include:
+The plan MUST have:
+- An index: a numbered list of every test by name and category
+- The design assumptions the tests rely on (rules, limits, state fields)
+- Tests grouped by the file they will live in, one block per test
+- Closing sections: "Deliberately not tested" (with a reason for each), "Changes to existing tests", and any manual or hardware validation that stands in for tests
+
+Each test block MUST include:
 
 | Field | Description |
 |-------|-------------|
-| **Test Name** | Descriptive name |
+| **Name** | The behavior in plain language. Someone who has not read the code can tell what breaks when it fails. No internal function names, no jargon, no restating the claim ("X shows as X"), no names so general they hide the cases ("never breaks"). A test that checks two things names both, or is split. |
 | **Category** | One of: Config validation, Constructor validation, State machine, Thread safety, Error handling, Integration, Documentation |
-| **Custom Logic Tested** | What OUR code is being tested (not framework/library) |
+| **Checks** | What is set up and what is asserted |
+| **Why** | The harm a wrong implementation would cause, in plain words, optionally followed by the distinct mistakes the test catches |
+
+### Mechanics
+
+Flag a plan whose tests would break these:
+- When behavior depends on time, time comes from an injected clock. No sleeps. Waiting uses a poll helper.
+- Concurrency tests are deterministic: hold a lock in one thread and assert on the other.
+- Stateful tests assert resulting state first, then side effects such as events, then the returned value.
+- Each subtest is named after the mistake it catches.
 
 ### Category Validation (Don't Just Accept Labels)
 
@@ -105,6 +123,9 @@ This puts friction where the disagreement is. A 20-row scorecard for a 20-test p
 ### Tests Reviewed
 [Count and summary]
 
+### Structure and Names
+[Missing plan sections or fields; names that fail the naming rules]
+
 ### Category Validation
 [For each test: does the proposed test actually match its claimed category?]
 
@@ -124,10 +145,6 @@ This puts friction where the disagreement is. A 20-row scorecard for a 20-test p
 ### Verdict
 APPROVED — all tests justified, well-formed, and correctly categorized
 NEEDS REVISION — issues must be addressed before implementation
-
-### Saved Proposal
-Saved to: `.claude/test-proposals/<branch-name>.md`
-[Full approved test plan for Phase 2 comparison]
 ```
 
 ---
@@ -140,8 +157,8 @@ When invoked after tests are written:
 2. Read the implemented test files
 3. For each proposed test, verify:
    - Test exists with expected name
-   - Test actually tests the "Custom Logic Tested" it claimed
-   - Test uses appropriate techniques (direct testing, state verification, proper setup)
+   - Test actually does what its Checks claimed
+   - Test uses appropriate techniques (direct testing, state verification, proper setup) and follows the Mechanics
    - Test would catch the bugs it claims to catch
    - **Failure messages are diagnostic** (see below)
 
@@ -178,7 +195,7 @@ Flag tests with non-diagnostic failure modes for revision. The fix is usually re
 ### Verification Results
 [For each test: does implementation match proposal?]
 
-| Test Name | Proposed Logic | Actually Tests | Match? |
+| Test Name | Proposed Checks | Actually Tests | Match? |
 |-----------|----------------|----------------|--------|
 | ... | ... | ... | ✓/✗ |
 

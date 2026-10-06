@@ -126,22 +126,43 @@ Use `/start-feature <name>` to create a worktree with a feature branch and enter
 - Implementation with quality review
 
 #### Test plan
+
 **After Architecture Design (before implementation):**
-Create a test plan using the required template:
+Write a test plan in the format below. A person reads it, so it must be skimmable and understandable without reading the code.
 
-| Test Name | Category | Justification |
-|-----------|----------|---------------|
-| ... | ... | ... |
+**Format**
 
-**Categories:** Config validation, Constructor validation, State machine, Thread safety, Error handling, Integration, Documentation
+1. Open with an index: a numbered list of every test by name and category.
+2. List the design assumptions the tests rely on (rules, limits, state fields) as a short bulleted list.
+3. Group tests by the file they will live in. Give each test its own block, not a table row:
 
-**Justification:** You must think carefully and explain *exactly* how your tests actually test meaningful custom logic, user input, or something else non-trivial.
+```
+**7. Repeated progress reports keep an install alive** (State machine)
+- Checks: one or two bullets saying what is set up and what is asserted.
+- Why: the harm a wrong implementation would cause.
+```
+
+4. End with three short sections: "Deliberately not tested" (with the reason for each), "Changes to existing tests", and any manual or hardware validation that stands in for tests.
+
+**Names.** A name states the behavior in plain language, so someone who has not read the code can tell what breaks when the test fails. Avoid internal function names, jargon, restating the claim ("X shows as X"), and names so general they hide the cases ("never breaks"). If a test checks two separate things, the name says both, or the test is split.
+
+**Categories:** Config validation, Constructor validation, State machine, Thread safety, Error handling, Integration, Documentation.
+
+**Why.** Name the harm in plain words: a good install marked failed, a machine booting an empty disk, a duplicated event, bad input reaching a log. Then, if useful, list the distinct mistakes the test would catch. "Pins the rule" and "restates the decision" are not justifications. You must think carefully and explain *exactly* how the test catches a real mistake in custom logic, user input, or something else non-trivial.
+
+**Test the implementation, not the decision.** Decisions — product choices, architecture, a default, a tie-break — belong in the spec. A test checks that the code carries out the design correctly; it does not defend the design against change. "Pins decision A" is not a justification. "Catches an off-by-one that admits a value the design excludes" is.
+
+**Mechanics the tests follow.**
+- When behavior depends on time, time comes from an injected clock. No sleeps. Waiting uses a poll helper.
+- Concurrency tests are deterministic: hold a lock in one thread and assert on the other. Do not rely on scheduling luck.
+- In a test of stateful behavior, assert the resulting state first, then side effects such as events, and the returned value last. A wrong return value then cannot hide a wrong state.
+- Name each subtest after the mistake it catches.
 
 **Test Scrutiny Phase 1:** Delegate to `test-scrutinizer` agent for plan review.
 - Pass it your test plan.
 - Work with the test-scrutinizer until it approves your plan.
-- When your plan is approved, save the approved proposal to `.claude/test-proposals/<branch-name>.md` for Phase 2 comparison
-- Ask the user to review your plan, and make any requested modifications.
+- When your plan is approved, save the approved proposal to `.claude/test-proposals/<branch-name>.md` for Phase 2 comparison. Replace any `/` in the branch name with `-`.
+- Ask the user to review your plan, and make any requested modifications. Edits that only remove or loosen tests do not need another scrutiny pass. Update the saved proposal with every edit.
 
 #### Implementation (TDD)
 
@@ -149,7 +170,7 @@ Create a test plan using the required template:
 2. Run tests (should fail)
 3. Implement feature
 4. Run tests (should pass)
-5. **Test Scrutiny Phase 2:** Delegate to `test-scrutinizer` agent for implementation review
+5. **Test Scrutiny Phase 2:** Delegate to `test-scrutinizer` agent for implementation review. Pass it the saved proposal's path.
 6. **If Phase 2 fails:** Return to step 1 — rewrite tests to match proposal, or revise proposal and re-run Phase 1
 
 ### Feature Validation
