@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 - Test plans are an index plus one block per test (name, category, checks, why) with closing sections for untested items, changed existing tests, and manual validation. Plans follow rules for test names, harm-based justifications, injected clocks, deterministic concurrency tests, and state-then-events-then-return assertion order
+- `test-expert` writes plans in the new format and does not justify tests by the decision they defend
 - `test-scrutinizer` checks the new plan format and rejects tests that only defend a product decision; the calling session saves the approved proposal to `.claude/test-proposals/<branch-name>.md` (`/` replaced by `-`), updates it on each user edit, and passes its path to Phase 2
 - `sync.sh` reads the installed plugin list from `claude plugin list --json` rather than scraping the table output, falling back to the scrape on CLIs without `--json`
 - `install.sh` now installs dependencies then runs `sync.sh deploy` instead of printing manual next steps
