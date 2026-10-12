@@ -123,7 +123,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -133,7 +133,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -143,7 +143,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -162,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -172,7 +172,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -182,7 +182,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -192,7 +192,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -202,7 +202,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -212,7 +212,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
@@ -230,7 +230,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/avery.rosen/.config/iterm2/cc-status"
+            "command": "$HOME/.config/iterm2/cc-status"
           }
         ]
       }
