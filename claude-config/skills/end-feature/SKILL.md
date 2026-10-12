@@ -22,8 +22,6 @@ Commit code and clean up after a feature or fix branch, optionally merging to ma
 5. If the `main` argument is present, push main to the origin
 6. If the `clean` argument is present, delete the branch, and the worktree when there was one
 
-Step 1 leaves `.claude/test-proposals/<branch>.md` alone. The test workflow writes it into the worktree and it is never committed.
-
 ## Leaving the worktree comes before merging
 
 A worktree-isolated session cannot merge. Redirecting git at the primary checkout with `-C` is refused by the harness, and `git switch main` inside the worktree fails because the primary checkout already has main checked out. A session that came from `/start-feature` has to return to the primary checkout first.
@@ -37,12 +35,12 @@ Never `action: "remove"` here. It refuses while the commits have reached no othe
 `clean` runs from the primary checkout, after the merge, with plain git:
 
 ```bash
-git worktree remove --force .claude/worktrees/<dir>
+git worktree remove .claude/worktrees/<dir>
 git worktree prune
 git branch -d <branch>
 ```
 
-`--force` covers the `.claude/test-proposals/` file left behind by design. Look at what the worktree holds before using it — anything beyond that file is unexpected, so stop and ask.
+`git worktree remove` refuses a worktree holding modified or untracked files. Step 1 committed everything, so a refusal means something unexpected is there; stop and ask.
 
 `git branch -d` refuses an unmerged branch. A refusal means the merge did not happen; report that rather than reaching for `-D`.
 

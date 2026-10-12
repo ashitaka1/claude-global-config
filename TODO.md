@@ -2,14 +2,6 @@
 
 ---
 
-## Functional Gaps
-
-### 1. No sync for `.claude/test-proposals/`
-
-The global CLAUDE.md references `.claude/test-proposals/<branch-name>.md` but this directory isn't in the sync configuration. This is a live-only directory generated during workflow and likely shouldn't sync back to repo.
-
----
-
 ## Robustness Issues
 
 ### 2. Platform-specific code in `format_file_details()`

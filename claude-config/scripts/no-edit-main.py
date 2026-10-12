@@ -69,7 +69,7 @@ def check_edit(payload: dict) -> None:
         return
 
     # A gitignored file cannot become a commit, so editing one on main does not
-    # put work on main. Scratch notes and .claude/test-proposals/ land here.
+    # put work on main. Scratch notes land here.
     try:
         ignored = subprocess.run(
             ["git", "check-ignore", "-q", file_path],
