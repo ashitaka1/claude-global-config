@@ -24,3 +24,6 @@ claude-config/plugins/
 
 # Per-project Claude Code settings (auto-created by permission prompts)
 .claude/
+
+# Python bytecode
+__pycache__/
