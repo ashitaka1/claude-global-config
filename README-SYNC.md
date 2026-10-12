@@ -38,6 +38,8 @@ Configuration is defined in `.sync-config.yaml`.
 - `claude-config/settings.sync.json` ↔ `~/.claude/settings.json`
 
 > Files with a `.sync` suffix in the repo (e.g., `settings.sync.json`) are renamed when deployed — the `.sync` is stripped to produce the live filename (`settings.json`).
+>
+> Settings files are compared as JSON, and `command` paths under your home directory are stored as `$HOME/...`, so the same settings work for any username.
 
 ### Directories (bidirectional)
 - `claude-config/agents/*` ↔ `~/.claude/agents/*`

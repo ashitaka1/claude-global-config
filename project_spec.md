@@ -169,6 +169,9 @@ When adding new files to deploy, always update `.sync-config.yaml` rather than h
 ### Settings File Naming Convention
 Settings file uses `.sync.json` suffix in repo (`settings.sync.json`) to distinguish it from live `settings.json` in `~/.claude/`. The sync system strips the suffix during deployment.
 
+### Portable Settings
+Sync compares settings files by their JSON content, with hook and status-line `command` strings rewritten so the machine's home path reads `$HOME/`, and writes settings files in that form in both directions. iTerm2 installs its `cc-status` hooks with an absolute home path and rewrites `settings.json` in its own JSON formatting; the work and personal machines have different usernames.
+
 ### Script Path References
 After consolidating scripts to `claude-config/scripts/`, all references in `settings.sync.json` and documentation must use `~/.claude/scripts/` prefix. This caught multiple references that needed updating.
 

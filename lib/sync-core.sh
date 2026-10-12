@@ -82,6 +82,24 @@ backup_directory() {
 # Checksum Functions
 # ============================================================================
 
+is_settings_file() {
+    case "$(basename "$1")" in
+        settings.json|settings.sync.json) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# iTerm2 installs its hooks into settings.json with this machine's absolute
+# home path, and rewrites the file in its own JSON formatting. Hook commands run
+# through a shell, so rewriting the home prefix to $HOME keeps them portable
+# across machines with different usernames.
+portable_settings() {
+    jq --arg home "$HOME/" '
+        walk(if type == "object" and (.command | type) == "string"
+             then .command |= (split($home) | join("$HOME/"))
+             else . end)' "$1"
+}
+
 compute_checksum() {
     local file="$1"
 
@@ -90,7 +108,20 @@ compute_checksum() {
         return
     fi
 
+    if is_settings_file "$file"; then
+        portable_settings "$file" | jq -S . | shasum -a 256 | awk '{print $1}'
+        return
+    fi
+
     shasum -a 256 "$file" | awk '{print $1}'
+}
+
+copy_file() {
+    if is_settings_file "$1"; then
+        portable_settings "$1" > "$2"
+    else
+        cp "$1" "$2"
+    fi
 }
 
 compute_directory_checksum() {
@@ -360,7 +391,7 @@ sync_file() {
     mkdir -p "$(dirname "$expanded_target")"
 
     # Copy file
-    cp "$source" "$expanded_target"
+    copy_file "$source" "$expanded_target"
     echo -e "${GREEN}✓${NC} Synced: $source → $expanded_target"
 }
 
@@ -1061,7 +1092,7 @@ sync_single_file() {
     fi
 
     mkdir -p "$(dirname "$dest")"
-    cp "$source" "$dest"
+    copy_file "$source" "$dest"
 }
 
 # Delete a file, removing empty parent directories
