@@ -27,11 +27,13 @@ Runs through the completion checklist:
 
 4. **Commit** — Stage and commit any documentation/status changes made by the previous steps.
 
+5. **Delete the test plan** — Remove the approved test plan saved for Phase 2.
+
 ## Implementation
 
 When invoked:
 
-1. Determine the current branch and project root. Verify we are NOT on main.
+1. Determine the current branch and project root. Verify we are NOT on main, unless the user supplied `!onmain` this session.
 
 2. Run the project's test command (check project CLAUDE.md for the test command). If tests fail, stop and report.
 
@@ -39,6 +41,7 @@ When invoked:
    ```bash
    git diff main...HEAD --stat
    ```
+   On main, compare against `origin/main` instead.
 
 4. Based on the changes, invoke the appropriate documentation skills with the Skill tool, all in one message so they run in parallel. Each forks into its own context and returns when done.
    - `update-readme` if there are user-facing changes
@@ -50,4 +53,10 @@ When invoked:
 
 6. Stage and commit any changes from documentation updates. Write the message per **Writing → Commit messages**.
 
-7. Report the final status: tests passing, docs updated, branch ready.
+7. Delete the approved test plan, if one exists:
+   ```bash
+   rm -f "$(git rev-parse --absolute-git-dir)/test-proposals/<branch-name>.md"
+   ```
+   with `/` in the branch name replaced by `-`.
+
+8. Report the final status: tests passing, docs updated, branch ready.

@@ -10,7 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `!onmain` in a prompt allows editing and committing on main for the rest of that session; `no-edit-main.py` records it from a `UserPromptSubmit` hook
 
 ### Changed
-- Approved test plans live in git's own directory, which git never tracks and `git worktree remove` deletes with the worktree; `/end-feature` removes worktrees without `--force`
+- Approved test plans live in git's own directory, which git never tracks and `git worktree remove` deletes with the worktree; `/end-feature` removes worktrees without `--force`, and `/completion-check` deletes the plan
+- `/completion-check` runs on main when the session has `!onmain`, comparing against `origin/main`
 - Test plans are an index plus one block per test (name, category, checks, why) with closing sections for untested items, changed existing tests, and manual validation. Plans follow rules for test names, harm-based justifications, injected clocks, deterministic concurrency tests, and state-then-events-then-return assertion order
 - `test-expert` writes plans in the new format and does not justify tests by the decision they defend
 - `test-scrutinizer` checks the new plan format and rejects tests that only defend a product decision; the calling session saves the approved proposal to `<git-dir>/test-proposals/<branch-name>.md` (`/` replaced by `-`), updates it on each user edit, and passes its path to Phase 2
