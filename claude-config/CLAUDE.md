@@ -117,11 +117,11 @@ A decision record is the one place alternatives belong: the decision, the altern
 
 ### Starting Work
 
-Use `/start-feature <name>` to create a worktree and begin guided development
+Use `/start-feature <name>` to create a feature branch and begin guided development
 
 ### Feature Development
 
-Use `/start-feature <name>` to create a worktree with a feature branch and enter guided feature development. This launches the feature-dev workflow which provides:
+Use `/start-feature <name>` to create a feature branch and enter guided feature development. This launches the feature-dev workflow which provides:
 - Discovery and clarifying questions
 - Agent-driven codebase exploration
 - Architecture design with trade-off analysis
@@ -190,7 +190,7 @@ Before merging to main, verify the feature works in the target environment:
 1. **Run `/completion-check`** — runs tests, handles documentation updates, commits.
 2. Attempt to validate the application in a test environment. Follow any project directives for doing so.
 3. Run `/revise-claude-md`.
-4. Stop and tell the user the branch is ready for `/end-feature`. That skill merges, pushes, and removes the worktree, and only the user invokes it.
+4. Stop and tell the user the branch is ready for `/end-feature`. That skill merges, pushes, and deletes the branch, and only the user invokes it.
 
 ---
 

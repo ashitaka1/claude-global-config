@@ -125,33 +125,31 @@ files:
 - `claude-config/settings.sync.json` (updated paths)
 - `.sync-config.yaml` (added scripts directory)
 
-### Milestone 4: Worktree-Based Feature Development
+### Milestone 4: Branch-Based Feature Development
 
-**Approach:** Use Claude Code's native worktree isolation rather than managing worktrees by hand
+**Approach:** Feature work happens on a plain branch in the primary checkout; worktrees are reserved for concurrent work
 
 **Key Decisions:**
+- `/start-feature` runs `git switch -c <branch>`; `/end-feature` switches to main, merges, and deletes the branch
+- A second session in the same repo starts with `claude -w <name>`; `/end-feature` calls `ExitWorktree` with `keep` before merging from such a session, then removes the worktree with plain git
 - Agents run with `isolation: "worktree"`; the harness creates the worktree under `.claude/worktrees/agent-<id>` and removes it if nothing changed
-- `/start-feature` calls `EnterWorktree`, which moves the session's working directory
-- `/end-feature` calls `ExitWorktree` with `keep` *before* merging, because a worktree-isolated session cannot reach the primary checkout; cleanup afterwards is plain `git worktree remove` and `git branch -d`
 - An agent owing the coordinator a specific branch renames its own with `git branch -m`
 - `worktree.baseRef` set to `head`, so worktrees fork from local work rather than `origin/<default-branch>`
 
 **Rationale:**
-- Subagents cannot reach paths outside the project root, and native isolation places worktrees inside it
-- Inside its worktree an agent runs plain `git`, so no wrapper script or directory flag is needed
+- A worktree's only benefit is a second working directory for concurrent sessions or agents, which interactive feature work rarely needs; for a single session it costs an exit before every merge, harness branch naming, and worktrees left behind in repos
+- Parallel agents edit concurrently, so they keep worktrees
 - Subagent worktrees inherit `baseRef`; under `fresh` a bug-fixer spawned from a feature branch would silently start from the remote default branch
 
 **Trade-offs considered:**
-- Hand-rolled worktrees in `.worktrees/` with a `worktree-git.sh` wrapper: what this replaced. Written when agents could not persist `cd` between Bash calls, and it required a hook to block `cd && git` and the directory flag
-- `claude -w` at session start: works, but fixes the branch decision before the session begins
-- `EnterWorktree` mid-session: chosen, because branch and tree creation stay in the REPL where the decision is actually made
+- Hand-rolled worktrees in `.worktrees/` with a `worktree-git.sh` wrapper: written when agents could not persist `cd` between Bash calls, and it required a hook to block `cd && git` and the directory flag
+- `EnterWorktree` in `/start-feature`: the previous approach. The harness names the branch `worktree-<name>`, so the skill renamed it, leaving `ExitWorktree` tracking a branch that no longer existed, and it appended `.claude/worktrees/` to each repo's `.gitignore`
+- A `WorktreeCreate` hook to name the branch directly: works, but replacing harness creation also replaces its `baseRef` handling and agent auto-cleanup, which the hook then has to reimplement
+- Plain branches: chosen, because concurrent sessions in one repo are rare and `claude -w` covers them
 
 **Files affected:**
-- `claude-config/CLAUDE.md` (dropped the directory-flag guidance)
+- `claude-config/CLAUDE.md`
 - `claude-config/skills/start-feature/SKILL.md`, `end-feature/SKILL.md`
-- `claude-config/skills/shared/references/agent-ops.md`, `parallel-fix`, `parallel-feature`
-- `claude-config/agents/bug-fixer.md`
-- `claude-config/settings.sync.json` (hook removed, `worktree.baseRef`)
 
 **Open questions:**
 - `/parallel-fix` still has the coordinator assign branch names; worth testing whether the rename step holds up across a full parallel run
@@ -159,9 +157,7 @@ files:
 ## Implementation Notes
 
 ### Worktree Placement
-Worktrees live under `.claude/worktrees/`. This repo covers that with its `.claude/` entry in `.gitignore`, but most repos do not, so `/start-feature` checks with `git check-ignore` and appends the entry when it is missing. The harness names agent worktrees after the agent id.
-
-`EnterWorktree` does not use its `name` argument as the branch name: it replaces `/` with `+` and prefixes `worktree-`. `/start-feature` renames the branch afterwards, which leaves `ExitWorktree` reporting a branch that no longer exists — the reason cleanup uses plain git rather than `ExitWorktree remove`.
+The harness puts worktrees under `.claude/worktrees/`, names agent worktrees after the agent id, and names the branch `worktree-<name>`.
 
 ### Sync Config Discipline
 When adding new files to deploy, always update `.sync-config.yaml` rather than hardcoding paths in shell scripts. This keeps the sync system maintainable and self-documenting.

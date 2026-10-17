@@ -14,9 +14,8 @@ Create a new feature branch and immediately enter guided feature development.
 
 ## What it does
 
-1. Creates a git worktree on a branch following the project's naming conventions (default: `<user>/feature-<name>` or `<user>/fix-<name>`) and moves the session into it
-2. Ensures the worktree directory is ignored
-3. Launches `/feature-dev:feature-dev` for guided development
+1. Creates and switches to a branch following the project's naming conventions (default: `<user>/feature-<name>` or `<user>/fix-<name>`)
+2. Launches `/feature-dev:feature-dev` for guided development
 
 ## Example
 
@@ -30,7 +29,7 @@ This creates `youruser/feature-user-authentication` and enters the feature-dev w
 
 When invoked with `$ARGUMENTS`:
 
-1. Work out the branch name before creating anything.
+1. Work out the branch name.
 
    **Check project CLAUDE.md first** for branch naming conventions. With none, use:
    - `<user>/fix-<label>` when the `fix` argument is present, or when `$ARGUMENTS` already begins with `fix-`
@@ -38,30 +37,15 @@ When invoked with `$ARGUMENTS`:
 
    `<user>` is the user's github username. `<label>` is `$ARGUMENTS` with any leading `fix-` removed, so `/start-feature fix-broken-parser` gives `<user>/fix-broken-parser` rather than `<user>/feature-fix-broken-parser`.
 
-2. Create the worktree and move this session into it.
-
-   Call `EnterWorktree` with `name` set to that branch name. The session's working directory moves into the worktree, so every later command runs there with plain `git`.
-
-   `EnterWorktree` derives its own branch name rather than using `name` verbatim: it replaces `/` with `+` and prefixes `worktree-`. Rename the branch to the one worked out in step 1:
+2. Create the branch from the current HEAD and switch to it:
 
    ```bash
-   git branch -m <branch-name>
-   git branch --show-current
+   git switch -c <branch-name>
    ```
 
-   After the rename `ExitWorktree` still reports the name it created, which no longer exists. That stays cosmetic because `/end-feature` cleans up with plain git rather than `ExitWorktree remove`.
+   Uncommitted changes come along onto the new branch.
 
-3. Make sure the worktree directory is ignored.
-
-   Worktrees land under `.claude/worktrees/`. Not every project ignores `.claude/`, and an unignored worktree shows up as untracked in the primary checkout for as long as it exists:
-
-   ```bash
-   git check-ignore -q .claude/worktrees || echo '.claude/worktrees/' >> .gitignore
-   ```
-
-   Commit that line with the feature's other changes.
-
-4. Immediately invoke the feature-dev skill:
+3. Immediately invoke the feature-dev skill:
    ```
    /feature-dev:feature-dev
    ```
@@ -73,6 +57,5 @@ Stop and report which step failed and what the refusal said. Do not route around
 ## Notes
 
 - Always check project CLAUDE.md for specific branch naming conventions first
-- The `worktree.baseRef` setting decides what the branch forks from: `fresh` (the default) uses `origin/<default-branch>`, `head` uses local HEAD
-- A worktree session is isolated: git commands that redirect to the primary checkout are refused. `/end-feature` leaves the worktree before it merges
+- A second session working in the same repo at the same time starts with `claude -w <name>`, which gives it its own worktree
 - The feature-dev workflow will handle planning, architecture, implementation, and testing

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `!onmain` in a prompt allows editing and committing on main for the rest of that session; `no-edit-main.py` records it from a `UserPromptSubmit` hook
 
 ### Changed
+- `/start-feature` creates a plain branch with `git switch -c`, and `/end-feature` merges it from the primary checkout; `claude -w` covers a second concurrent session
 - Approved test plans live in git's own directory, which git never tracks and `git worktree remove` deletes with the worktree; `/end-feature` removes worktrees without `--force`, and `/completion-check` deletes the plan
 - `/completion-check` runs on main when the session has `!onmain`, comparing against `origin/main`
 - Test plans are an index plus one block per test (name, category, checks, why) with closing sections for untested items, changed existing tests, and manual validation. Plans follow rules for test names, harm-based justifications, injected clocks, deterministic concurrency tests, and state-then-events-then-return assertion order

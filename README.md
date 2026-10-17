@@ -24,9 +24,9 @@ Workflow automation agents:
 
 ### Skills (`claude-config/skills/`)
 
-- `/start-feature <name>` - Create a worktree with a feature branch and launch guided development
+- `/start-feature <name>` - Create a feature branch and launch guided development
 - `/completion-check` - Pre-merge checklist: tests, documentation, commit
-- `/end-feature [push] [merge] [main] [clean]` - Commit, merge, push, and leave the worktree
+- `/end-feature [push] [merge] [main] [clean]` - Commit, merge, push, and delete the branch
 - `/parallel-fix`, `/parallel-feature` - Fan work out across isolated worktrees
 - `/update-readme`, `/update-changelog`, `/update-project-spec`, `/update-claude-md` - Documentation updaters, each forked into its own context
 - `/retro` - Review workflow and suggest improvements
