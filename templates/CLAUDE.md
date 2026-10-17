@@ -2,12 +2,6 @@
 
 This file provides project-specific guidance to Claude Code (claude.ai/code) for this repository.
 
-## Current Status
-
-*Keep this section updated as the project progresses.*
-
-Project phase: [Setup / Active Development / Maintenance / etc.]
-
 ## About This Project
 
 *Brief description of what this project does and its key components.*

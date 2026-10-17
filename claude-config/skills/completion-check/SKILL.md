@@ -21,11 +21,11 @@ Runs through the completion checklist:
    - `/update-readme` — if user-facing changes were made
    - `/update-project-spec` — if technical/architectural changes were made
    - `/update-changelog` — if changes affect users/contributors
-   - `/update-claude-md` — if workflow or project status changes
+   - `/update-claude-md` — if workflow, commands, or gotchas changed
 
-3. **Update project CLAUDE.md** — Ensure "Current Status" section reflects the current state of the project.
+3. **Milestone checks** — List any milestone whose check the owner hasn't confirmed.
 
-4. **Commit** — Stage and commit any documentation/status changes made by the previous steps.
+4. **Commit** — Stage and commit any documentation changes made by the previous steps.
 
 5. **Delete the test plan** — Remove the approved test plan saved for Phase 2.
 
@@ -47,9 +47,9 @@ When invoked:
    - `update-readme` if there are user-facing changes
    - `update-project-spec` if there are architectural or technical changes
    - `update-changelog` if there are user/contributor-facing changes
-   - `update-claude-md` if project status or workflow changed
+   - `update-claude-md` if workflow, commands, or gotchas changed
 
-5. Review the CLAUDE.md "Current Status" section and update it if needed.
+5. Read the milestones in `project_spec.md` and list any open milestone whose check the owner hasn't confirmed in the final report.
 
 6. Stage and commit any changes from documentation updates. Write the message per **Writing → Commit messages**.
 

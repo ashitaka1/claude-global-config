@@ -105,8 +105,8 @@ Each file has one audience. Content belonging to another audience goes to that f
 | File | Audience | Content |
 |------|----------|---------|
 | `README.md` | someone learning to use the project | what it does, how to install and run it, how to configure it |
-| `project_spec.md` | someone working on the project | architecture, data schemas, implementation notes, technical debt, open questions, decision records |
-| `CLAUDE.md` | Claude, working in this repo | project status, test and build commands, workflow overrides |
+| `project_spec.md` | someone working on the project | milestones and their status, architecture, data schemas, implementation notes, technical debt, open questions, decision records |
+| `CLAUDE.md` | Claude, working in this repo | guidance only: invariants, test and build commands, gotchas, workflow overrides. No status, plans, or next steps |
 | `changelog.md` | users and contributors tracking releases | one entry per logical change, categorized |
 
 A decision record is the one place alternatives belong: the decision, the alternatives, and what distinguished them. Everywhere else, record the decision alone.

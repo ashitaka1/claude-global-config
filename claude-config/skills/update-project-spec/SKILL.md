@@ -21,7 +21,8 @@ You update project_spec.md with technical and architectural information.
 3. Update relevant sections:
 
 ### Milestones
-- Mark milestones as complete when finished
+- Set a milestone to ✅ only when the owner has confirmed its check. Otherwise leave it ⏳.
+- Give each new milestone a check.
 - Update descriptions if scope changed
 - Add new milestones if project expanded
 

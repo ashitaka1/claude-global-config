@@ -1,6 +1,6 @@
 ---
 name: update-claude-md
-description: Updates the project-level CLAUDE.md when development practices or project status change.
+description: Updates the project-level CLAUDE.md when development practices, commands, or gotchas change.
 context: fork
 background: false
 model: sonnet
@@ -20,9 +20,9 @@ You update the project-level CLAUDE.md in the repo root.
 
 3. Update relevant sections:
 
-### Current Status
-- Update project phase/milestone
-- Keep it to 1-2 sentences about where the project stands
+### Guidance only
+- CLAUDE.md holds guidance: invariants, commands, gotchas, workflow overrides, and the file layout.
+- Remove any status, next steps, plans, phase references, or unbuilt modules you find. That state belongs in `project_spec.md`.
 
 ### Project-Specific Conventions
 - Testing instructions (how to run tests)

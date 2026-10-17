@@ -30,11 +30,12 @@
 
 ### Milestones
 
-*Break work into phases if the project is complex:*
+*Each milestone has a status (⏳ open, ✅ done) and the check the owner runs before it is marked done:*
 
-1. ✅/⏳ Milestone 1: Description
+1. ⏳ Milestone 1: Description
+   - Check: what the owner verifies
 2. ⏳ Milestone 2: Description
-3. ⏳ Milestone 3: Description
+   - Check: what the owner verifies
 
 ### Nice-to-Have
 - Feature if time permits
