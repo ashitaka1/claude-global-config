@@ -116,7 +116,6 @@
       "Bash(viam *)"
     ]
   },
-  "model": "opus",
   "hooks": {
     "Notification": [
       {
