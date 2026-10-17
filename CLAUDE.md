@@ -2,12 +2,6 @@
 
 This file provides project-specific guidance for working on this repository.
 
-## Current Status
-
-Project phase: Active Development
-
-Configuration sync system is functional. Agent and session worktrees use Claude Code's native isolation; writing guidance is consolidated in one section of the global CLAUDE.md.
-
 ## About This Repository
 
 This is a Claude Code global configuration repository. It manages:
