@@ -42,8 +42,9 @@ This project provides a global configuration system for Claude Code, enabling co
 1. ✅ Core sync system functional
 2. ✅ Global CLAUDE.md with development workflow
 3. ✅ Script consolidation and statusline rewrite
-4. ✅ Worktree-based feature development workflow
-5. ⏳ Cross-platform compatibility
+4. ✅ Branch-based feature development workflow
+5. ⏳ Project state tracked in GitHub issues. Check: in a project whose CLAUDE.md declares `Tracking: GitHub issues (<owner>/<repo>)`, `update-project-spec` files a milestone, a question, and a debt item as issues, and `/completion-check` lists the open milestones and the issues the branch closes
+6. ⏳ Cross-platform compatibility
 
 ## Tech Stack
 
@@ -74,7 +75,7 @@ This project provides a global configuration system for Claude Code, enabling co
 - **claude-config/**: Canonical source directory for all configuration files
   - **CLAUDE.md**: Global development standards and workflow
   - **agents/**: Workflow automation agents (markdown files)
-  - **scripts/**: Shell scripts (api_key_helper.sh, statusline.sh, terminal-color.sh)
+  - **scripts/**: Hook and helper scripts (no-edit-main.py, statusline.sh, terminal-color.sh)
   - **skills/**: Slash commands (start-feature, feature-dev, etc.)
   - **settings.sync.json**: Claude Code settings
   - **plugins.txt**: List of plugins to install
@@ -93,6 +94,7 @@ files:
 
 **Settings (settings.sync.json):**
 - Standard Claude Code settings format
+- No `model` key, so Claude Code uses its default
 - Uses `.sync` suffix in repo to distinguish from live `settings.json`
 
 ### Configuration Variables
@@ -155,6 +157,12 @@ files:
 - `/parallel-fix` still has the coordinator assign branch names; worth testing whether the rename step holds up across a full parallel run
 
 ## Implementation Notes
+
+### Main-Branch Edit Guard
+`claude-config/scripts/no-edit-main.py` runs as a hook and blocks edits and commits while the checkout is on `main`. A `UserPromptSubmit` hook records `!onmain` from the user's prompt, and the guard allows edits for the rest of that session. Only the user's prompt counts; the agent cannot set it.
+
+### GitHub Issue Tracking
+A project opts in with a `Tracking: GitHub issues (<owner>/<repo>)` line in its CLAUDE.md. Milestones are GitHub milestones whose description holds the owner's check, open questions carry the `question` label, technical debt carries `tech-debt`, and planned work is an issue. Commits that resolve an issue end with `Closes #N`. Without the line, these stay in `project_spec.md`.
 
 ### Worktree Placement
 The harness puts worktrees under `.claude/worktrees/`, names agent worktrees after the agent id, and names the branch `worktree-<name>`.

@@ -7,9 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- A project whose CLAUDE.md contains `Tracking: GitHub issues (<owner>/<repo>)` keeps milestones, open questions (`question` label), technical debt (`tech-debt` label), and planned work in GitHub; `update-project-spec` files them, `/completion-check` lists open milestones and the issues the branch closes, and commits resolving an issue carry `Closes #N`
 - `!onmain` in a prompt allows editing and committing on main for the rest of that session; `no-edit-main.py` records it from a `UserPromptSubmit` hook
 
 ### Changed
+- Project `CLAUDE.md` holds guidance only; status, plans, and next steps live in `project_spec.md`, and `/completion-check` reads open milestones from it
+- `settings.sync.json` no longer pins a model, so Claude Code uses its default
 - `/start-feature` creates a plain branch with `git switch -c`, and `/end-feature` merges it from the primary checkout; `claude -w` covers a second concurrent session
 - Approved test plans live in git's own directory, which git never tracks and `git worktree remove` deletes with the worktree; `/end-feature` removes worktrees without `--force`, and `/completion-check` deletes the plan
 - `/completion-check` runs on main when the session has `!onmain`, comparing against `origin/main`

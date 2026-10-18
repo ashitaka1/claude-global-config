@@ -113,7 +113,23 @@ See [README-SYNC.md](README-SYNC.md) for detailed sync documentation.
 
 1. Run `./sync.sh deploy` to install global config to `~/.claude/`
 2. Copy `templates/CLAUDE.md` and `templates/project_spec.md` into new projects for project-level config
-3. Use agents during development: `pre-work-check`, `test-scrutinizer`, `completion-checker`, etc.
+3. Use agents during development: `pre-work-check`, `test-scrutinizer`, `test-expert`, etc.
+
+### Tracking project state in GitHub issues
+
+By default a project keeps milestones, open questions, and technical debt in `project_spec.md`. To keep them in GitHub instead, add this line to the project's `CLAUDE.md`:
+
+```
+Tracking: GitHub issues (<owner>/<repo>)
+```
+
+With the line present:
+
+- Milestones are GitHub milestones, with the owner's check in the description.
+- Open questions (`question` label), technical debt (`tech-debt` label), and planned work are issues.
+- `/update-project-spec` files them.
+- `/completion-check` lists the open milestones and the issues the branch closes.
+- Commits that resolve an issue end with `Closes #N`.
 
 ## Workflow
 
