@@ -111,6 +111,21 @@ Each file has one audience. Content belonging to another audience goes to that f
 
 A decision record is the one place alternatives belong: the decision, the alternatives, and what distinguished them. Everywhere else, record the decision alone.
 
+#### Issue-tracked projects
+
+A project whose CLAUDE.md contains the line `Tracking: GitHub issues (<owner>/<repo>)` keeps its state in that repo's GitHub issues:
+
+| Item | Home |
+|------|------|
+| Milestones and their status | GitHub milestones. The description holds the check the owner runs before closing it |
+| Open questions | issues labeled `question` |
+| Technical debt | issues labeled `tech-debt` |
+| Planned work | issues, assigned to a milestone |
+
+`project_spec.md` keeps architecture, data schemas, implementation notes, and decision records, and has no milestone, open-question, or debt sections.
+
+Open an issue for each new question or piece of debt, comment on issues a branch advances, and put `Closes #N` in the commit that resolves an issue. Leave everything else open: a milestone closes only after the owner confirms its check, and an issue without a resolving commit closes by the owner's hand.
+
 ---
 
 ## Development Workflow

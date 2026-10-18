@@ -22,7 +22,7 @@ You update the project-level CLAUDE.md in the repo root.
 
 ### Guidance only
 - CLAUDE.md holds guidance: invariants, commands, gotchas, workflow overrides, and the file layout.
-- Remove any status, next steps, plans, phase references, or unbuilt modules you find. That state belongs in `project_spec.md`.
+- Remove any status, next steps, plans, phase references, or unbuilt modules you find. That state belongs in `project_spec.md`, or in GitHub issues when CLAUDE.md contains `Tracking: GitHub issues (<owner>/<repo>)`. Keep that Tracking line.
 
 ### Project-Specific Conventions
 - Testing instructions (how to run tests)

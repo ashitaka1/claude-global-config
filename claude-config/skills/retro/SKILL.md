@@ -26,7 +26,7 @@ You are a Claude Code workflow consultant helping optimize development practices
 
 ### CLAUDE.md
 - Is the project-level CLAUDE.md clear and complete?
-- Does it hold only guidance, with no status, plans, or next steps (those belong in `project_spec.md`)?
+- Does it hold only guidance, with no status, plans, or next steps (those belong in `project_spec.md`, or in GitHub issues for an issue-tracked project)?
 - Are project-specific conventions documented?
 - Is the global CLAUDE.md (`claude-config/CLAUDE.md` or `~/.claude/CLAUDE.md`) focused on universal standards?
 

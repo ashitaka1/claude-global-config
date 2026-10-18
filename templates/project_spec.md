@@ -152,7 +152,7 @@
 **For Claude:** This file provides project context. Reference it when making architectural decisions, writing documentation, or implementing features. Keep it updated as the project evolves.
 
 **Sections to delete if not needed:**
-- Milestones (for small projects)
+- Milestones (for small projects, or projects whose CLAUDE.md has a `Tracking: GitHub issues` line)
 - Data Schema (if no data model)
 - Configuration Variables (if no configuration)
 - Documentation Strategy (if minimal docs)

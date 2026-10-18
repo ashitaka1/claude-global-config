@@ -49,7 +49,11 @@ When invoked:
    - `update-changelog` if there are user/contributor-facing changes
    - `update-claude-md` if workflow, commands, or gotchas changed
 
-5. Read the milestones in `project_spec.md` and list any open milestone whose check the owner hasn't confirmed in the final report.
+5. List in the final report any open milestone whose check the owner hasn't confirmed. Read the milestones from `project_spec.md`, or, when the project CLAUDE.md contains `Tracking: GitHub issues (<owner>/<repo>)`, from GitHub:
+   ```bash
+   gh api "repos/<owner>/<repo>/milestones?state=open" --jq '.[] | "\(.title)\t\(.open_issues) open\t\(.description)"'
+   ```
+   In an issue-tracked project, also list the issues this branch's commits close (`git log main..HEAD --grep='Closes #'`) and the issues `update-project-spec` left for the owner to close.
 
 6. Stage and commit any changes from documentation updates. Write the message per **Writing → Commit messages**.
 

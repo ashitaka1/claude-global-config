@@ -8,6 +8,10 @@ This file provides project-specific guidance to Claude Code (claude.ai/code) for
 
 See `project_spec.md` for technical architecture, milestones, and implementation decisions.
 
+*For a project that tracks milestones, open questions, and technical debt in GitHub issues, add this line and remove those sections from `project_spec.md`:*
+
+Tracking: GitHub issues (owner/repo)
+
 ## Project-Specific Conventions
 
 *Override or extend global defaults here. Only include conventions that differ from or add to the global CLAUDE.md.*
