@@ -191,11 +191,17 @@ This required careful shell scripting to handle errors gracefully and avoid bloc
 
 ## Technical Debt
 
+### Conflicts with Viam's shared config
+Viam's shared config, `viamrobotics/claude-code-configuration` (cloned at `~/eng/claude-code-config`), also installs into `~/.claude/`. Its `make install` merges item by item. `./sync.sh deploy` replaces `skills/`, `scripts/`, and `agents/` with `rsync --delete` and copies `settings.json` whole (`lib/sync-core.sh:480`), so a deploy erases what that install added: its skills, scripts, and agents, and the permissions, hooks, and `statusLine` it merged into settings.
+
+The repos also overlap:
+- `viam-claude/` here and `plugins/viam-claude/` upstream are diverged copies of one plugin. This copy has `skills/`; upstream has `commands/`.
+- Both ship `terminal-color.sh` and a status line script (`statusline.sh` here, `status-line.sh` upstream), with different contents.
+- Upstream's `worktree-enforcement` bundle (`rules/worktree-only.md`, `/new-work`) requires a worktree for every edit. This repo develops on plain branches in the primary checkout.
+- Upstream's `rules/code-comments.md` and `rules/pull-request.md` overlap the global CLAUDE.md's **Writing** section.
+
 ### No test suite
 The project consists primarily of shell scripts but has no automated tests. Validation is manual via `./sync.sh status`. Consider adding basic integration tests.
-
-### Viam plugin coupling
-The `viam-claude/` directory is domain-specific (robotics) and creates coupling. Consider moving to separate repo or documenting as optional example.
 
 ## Development Process
 
