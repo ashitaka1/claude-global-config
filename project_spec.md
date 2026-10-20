@@ -44,7 +44,8 @@ This project provides a global configuration system for Claude Code, enabling co
 3. ✅ Script consolidation and statusline rewrite
 4. ✅ Branch-based feature development workflow
 5. ⏳ Project state tracked in GitHub issues. Check: in a project whose CLAUDE.md declares `Tracking: GitHub issues (<owner>/<repo>)`, `update-project-spec` files a milestone, a question, and a debt item as issues, and `/completion-check` lists the open milestones and the issues the branch closes
-6. ⏳ Cross-platform compatibility
+6. ⏳ Shared config moved to `viamrobotics/claude-code-configuration`, with this repo holding only personal config. Check: every non-personal item here has a merged upstream PR or a recorded reason to stay, and `./sync.sh deploy` leaves an upstream `make install` intact
+7. ⏳ Cross-platform compatibility
 
 ## Tech Stack
 
