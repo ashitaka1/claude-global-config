@@ -113,18 +113,34 @@ A decision record is the one place alternatives belong: the decision, the altern
 
 #### Issue-tracked projects
 
-A project whose CLAUDE.md contains the line `Tracking: GitHub issues (<owner>/<repo>)` keeps its state in that repo's GitHub issues:
+A project whose CLAUDE.md contains a Tracking line keeps its state in GitHub issues. The line names one repo or several, optionally the GitHub Project they share, and the repos whose new issues the Project's auto-add workflow adds:
+
+```
+Tracking: GitHub issues (<owner>/<repo>)
+Tracking: GitHub issues (<owner>/<repo>, <owner>/<repo>); project <owner>/<number>; auto-add <owner>/<repo>
+```
+
+Rely on auto-add only for a repo the line lists after `auto-add`; add every other repo's new issues to the Project by hand.
 
 | Item | Home |
 |------|------|
-| Milestones and their status | GitHub milestones. The description holds the check the owner runs before closing it |
-| Open questions | issues labeled `question` |
-| Technical debt | issues labeled `tech-debt` |
+| Milestones and their status | GitHub milestones. The description contains a `Check:` line, the check the owner runs before closing it, and may hold anything else |
+| Open questions | issues of type `Question` in an organization's repo; issues labeled `question` in a personal account's |
+| Technical debt | issues of type `Tech debt` in an organization's repo; issues labeled `tech-debt` in a personal account's |
 | Planned work | issues, assigned to a milestone |
+| Dependencies | native blocked-by links between the specific issues that depend, across repos where needed |
 
 `project_spec.md` keeps architecture, data schemas, implementation notes, and decision records, and has no milestone, open-question, or debt sections.
 
-Open an issue for each new question or piece of debt, comment on issues a branch advances, and put `Closes #N` in the commit that resolves an issue. Leave everything else open: a milestone closes only after the owner confirms its check, and an issue without a resolving commit closes by the owner's hand.
+A new milestone, question, or piece of debt goes in the repo whose code it concerns. A milestone with work in several repos is a milestone in each, with the same title and the same `Check:` line; reports list them together. A milestone title is a plain name, `Connect`, with no index. A milestone neither blocks nor is blocked: where one piece of work must precede another, link the two issues. A missing issue type or label is expected; create it before first use.
+
+Ready work is an open issue with no open blocker. `/next` finds it and proposes one; `/issue` creates an issue with its links.
+
+Open an issue for each new question or piece of debt, comment on issues a branch advances, and put `Closes #N` in the commit that resolves an issue, or `Closes <owner>/<repo>#N` for an issue in another repo. Leave everything else open: a milestone closes only after the owner confirms its check, and an issue without a resolving commit closes by the owner's hand.
+
+In a session started with `claude -w`, which runs in `<repo>/.claude/worktrees/<name>`, Claude Code refuses `gh` commands that write, including the user's `!` commands. There, make GitHub writes through the GitHub MCP tools, which create and update issues (milestone, labels, type, issue fields, assignees, a parent in any repo) and comment on them. For writes they lack — blocked-by links, Project items, milestones, labels, issue types — write any body to a file in the scratchpad and give the user the full `gh` command to run in a terminal outside Claude Code. Do not retry it in the session. Reads (`gh issue list`, `gh api` GETs) run normally.
+
+In such a worktree, shell commands with `$VAR` paths or compound `git` invocations are also refused. Spell out literal paths and run `git` commands on their own.
 
 ---
 

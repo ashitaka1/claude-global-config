@@ -43,7 +43,7 @@ This project provides a global configuration system for Claude Code, enabling co
 2. ✅ Global CLAUDE.md with development workflow
 3. ✅ Script consolidation and statusline rewrite
 4. ✅ Branch-based feature development workflow
-5. ⏳ Project state tracked in GitHub issues. Check: in a project whose CLAUDE.md declares `Tracking: GitHub issues (<owner>/<repo>)`, `update-project-spec` files a milestone, a question, and a debt item as issues, and `/completion-check` lists the open milestones and the issues the branch closes
+5. ⏳ Project state tracked in GitHub issues. Check: in a project whose CLAUDE.md declares `Tracking: GitHub issues (<owner>/<repo>)`, `update-project-spec` files a milestone, a question, and a debt item as issues, and `/completion-check` lists the open milestones and the issues the branch closes; in a project tracking two repos, `/issue` creates an issue blocked by one in the other repo and `/next` leaves it out of the ready list until the blocker closes
 6. ⏳ Shared config moved to `viamrobotics/claude-code-configuration`, with this repo holding only personal config. Check: every non-personal item here has a merged upstream PR or a recorded reason to stay, and `./sync.sh deploy` leaves an upstream `make install` intact
 7. ⏳ Cross-platform compatibility
 
@@ -163,7 +163,9 @@ files:
 `claude-config/scripts/no-edit-main.py` runs as a hook and blocks edits and commits while the checkout is on `main`. A `UserPromptSubmit` hook records `!onmain` from the user's prompt, and the guard allows edits for the rest of that session. Only the user's prompt counts; the agent cannot set it.
 
 ### GitHub Issue Tracking
-A project opts in with a `Tracking: GitHub issues (<owner>/<repo>)` line in its CLAUDE.md. Milestones are GitHub milestones whose description holds the owner's check, open questions carry the `question` label, technical debt carries `tech-debt`, and planned work is an issue. Commits that resolve an issue end with `Closes #N`. Without the line, these stay in `project_spec.md`.
+A project opts in with a `Tracking: GitHub issues (...)` line in its CLAUDE.md naming one repo or several, optionally followed by `; project <owner>/<number>` and `; auto-add <owner>/<repo>`. Milestones are GitHub milestones with plain-name titles whose description contains a `Check:` line; a milestone with work in several repos is a same-titled milestone in each. Questions and debt are the issue types `Question` and `Tech debt` in an organization's repos and the labels `question` and `tech-debt` in a personal account's, created on first use. Planned work is an issue. Commits that resolve an issue end with `Closes #N` or `Closes <owner>/<repo>#N`. Without the line, these stay in `project_spec.md`.
+
+Dependencies are native blocked-by links between the specific issues that depend. A milestone neither blocks nor is blocked: a milestone-level dependency is lossy, and in Ascension two milestones each waited on the other, a cycle that resolves into a chain at issue level. `/next` finds ready work with the advanced search (`advanced_search=true`; the plain search ignores `is:blocked`), joining several `repo:` qualifiers with `OR`, since the advanced engine ANDs them. The search index lags closes by a few minutes, so `/next` can propose a just-closed issue; the owner's confirmation catches it. An agent relies on auto-add only for a repo the Tracking line lists, and adds others with `gh project item-add`.
 
 ### Worktree Placement
 The harness puts worktrees under `.claude/worktrees/`, names agent worktrees after the agent id, and names the branch `worktree-<name>`.

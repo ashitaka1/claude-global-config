@@ -29,6 +29,7 @@ Workflow automation agents:
 - `/end-feature [push] [merge] [main] [clean]` - Commit, merge, push, and delete the branch
 - `/parallel-fix`, `/parallel-feature` - Fan work out across isolated worktrees
 - `/update-readme`, `/update-changelog`, `/update-project-spec`, `/update-claude-md` - Documentation updaters, each forked into its own context
+- `/next`, `/issue` - Propose ready work and create linked issues in issue-tracked projects
 - `/retro` - Review workflow and suggest improvements
 - `/transcribe`, `/ssh-mcp`, `/script-writer`, `/xcodebuildmcp-cli` - Standalone tools
 
@@ -123,13 +124,31 @@ By default a project keeps milestones, open questions, and technical debt in `pr
 Tracking: GitHub issues (<owner>/<repo>)
 ```
 
+A project spanning several repos names them all, and optionally the GitHub Project they share and the repos that Project auto-adds issues from:
+
+```
+Tracking: GitHub issues (<owner>/<repo>, <owner>/<repo>); project <owner>/<number>; auto-add <owner>/<repo>
+```
+
 With the line present:
 
-- Milestones are GitHub milestones, with the owner's check in the description.
-- Open questions (`question` label), technical debt (`tech-debt` label), and planned work are issues.
-- `/update-project-spec` files them.
+- Milestones are GitHub milestones with plain-name titles. The description contains a `Check:` line, the owner's check before closing it. A milestone with work in several repos has a same-titled milestone in each.
+- Open questions, technical debt, and planned work are issues. Questions and debt use the issue types `Question` and `Tech debt` in an organization's repos and the labels `question` and `tech-debt` in a personal account's; missing ones are created on first use.
+- Dependencies are native blocked-by links between issues, across repos where needed.
+- `/update-project-spec` files milestones, questions, and debt in the repo whose code they concern.
+- `/next` proposes an open issue with no open blocker; `/issue` creates an issue with its milestone, links, and parent, and adds it to the Project.
 - `/completion-check` lists the open milestones and the issues the branch closes.
-- Commits that resolve an issue end with `Closes #N`.
+- Commits that resolve an issue end with `Closes #N`, or `Closes <owner>/<repo>#N` for an issue in another repo.
+
+#### Setting up a multi-repo project
+
+These are done by hand in GitHub:
+
+1. Put the repos in an organization (GitHub Free suffices); only organizations have issue types and issue fields.
+2. Create one org-level Project and add the repos' existing issues to it.
+3. Add a saved view filtered `is:open -is:blocked` and grouped by milestone. Grouping is set in the web UI.
+4. Turn on the built-in workflow that moves closed items to Done.
+5. Optionally, turn on auto-add for one repo (GitHub Free allows one auto-add workflow) and name that repo after `auto-add` in the Tracking line.
 
 ## Workflow
 
