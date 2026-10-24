@@ -30,7 +30,7 @@
 
 ### Milestones
 
-*Each milestone has a status (⏳ open, ✅ done) and the check the owner runs before it is marked done:*
+*Each milestone has a status (⏳ open, 🔎 built and awaiting the owner's check, ✅ done) and the check the owner runs before it is marked done:*
 
 1. ⏳ Milestone 1: Description
    - Check: what the owner verifies

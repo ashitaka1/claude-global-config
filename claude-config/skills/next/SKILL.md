@@ -1,6 +1,6 @@
 ---
 name: next
-description: Propose the next ready issue across the repos in an issue-tracked project's Tracking line. Use when deciding what to work on next.
+description: Propose what to work on next — a ready issue across an issue-tracked project's repos, or the next open milestone in project_spec.md. Use when deciding what to work on next.
 ---
 
 Propose one ready issue to work on: an open issue with no open blocker.
@@ -13,7 +13,7 @@ Propose one ready issue to work on: an open issue with no open blocker.
 
 ## Steps
 
-1. Read the `Tracking: GitHub issues (...)` line from the project CLAUDE.md. Without one, say the project is not issue-tracked and stop.
+1. Read the `Tracking: GitHub issues (...)` line from the project CLAUDE.md. Without one, the project keeps its state in `project_spec.md`; follow **Projects without a Tracking line** below instead.
 
 2. Search the tracked repos for ready issues. Join the repos with `OR`; several `repo:` qualifiers without it match nothing. The advanced engine is required, since the plain search ignores `is:blocked` and returns every issue:
    ```bash
@@ -40,3 +40,9 @@ Propose one ready issue to work on: an open issue with no open blocker.
    gh issue edit <n> -R <owner>/<repo> --add-assignee @me
    ```
    In a `claude -w` session, assign it through the GitHub MCP tool `issue_write` (`method: update`, `assignees`).
+
+## Projects without a Tracking line
+
+1. Read `project_spec.md` § Milestones. The open milestones are the ones marked ⏳; their order in the list is the intended order. A milestone marked 🔎 is built and waits only on the owner's check: list it as waiting, and do not propose it. Without a `project_spec.md`, say there is no recorded work to pick from and stop.
+2. Read § Technical Debt and § Open Questions for items that block an open milestone.
+3. Propose the first open milestone in one line: its number, name, and check. Name any debt or question that has to be settled first. Wait for the user to confirm or choose another.

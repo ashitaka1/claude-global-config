@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- `/next` in a project without a Tracking line proposes the first open milestone in `project_spec.md`; a 🔎 status marks a milestone whose work has landed and waits only on the owner's check
 - The Tracking line names several repos, a shared GitHub Project, and its auto-add repos; skills read and file state in each repo, with cross-repo `Closes <owner>/<repo>#N`
 - `/next` proposes an open issue with no open blocker across the tracked repos; `/issue` creates an issue with its milestone, native blocked-by links, and parent, and adds it to the Project
 - A project whose CLAUDE.md contains `Tracking: GitHub issues (<owner>/<repo>)` keeps milestones, open questions (`question` label), technical debt (`tech-debt` label), and planned work in GitHub; `update-project-spec` files them, `/completion-check` lists open milestones and the issues the branch closes, and commits resolving an issue carry `Closes #N`

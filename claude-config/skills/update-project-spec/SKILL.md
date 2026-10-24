@@ -23,7 +23,7 @@ You update project_spec.md with technical and architectural information. In an i
 4. Update relevant sections:
 
 ### Milestones
-- Set a milestone to ✅ only when the owner has confirmed its check. Otherwise leave it ⏳.
+- Set a milestone to 🔎 when its work has landed and only the owner's check remains, and to ✅ only when the owner has confirmed the check. Otherwise leave it ⏳.
 - Give each new milestone a check.
 - Update descriptions if scope changed
 - Add new milestones if project expanded
