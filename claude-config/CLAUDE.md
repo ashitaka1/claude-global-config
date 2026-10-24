@@ -163,7 +163,7 @@ Write a test plan in the format below. A person reads it, so it must be skimmabl
 
 **Names.** A name states the behavior in plain language, so someone who has not read the code can tell what breaks when the test fails. Avoid internal function names, jargon, restating the claim ("X shows as X"), and names so general they hide the cases ("never breaks"). If a test checks two separate things, the name says both, or the test is split.
 
-**Categories:** Config validation, Constructor validation, State machine, Thread safety, Error handling, Integration, Documentation.
+**Categories:** Config validation, Constructor validation, State machine, Thread safety, Error handling, Algorithm, Integration, Documentation. Algorithm covers domain-specific computation such as graphics, geometry, and signal processing.
 
 **Why.** Name the harm in plain words: a good install marked failed, a machine booting an empty disk, a duplicated event, bad input reaching a log. Then, if useful, list the distinct mistakes the test would catch. "Pins the rule" and "restates the decision" are not justifications. You must think carefully and explain *exactly* how the test catches a real mistake in custom logic, user input, or something else non-trivial.
 
