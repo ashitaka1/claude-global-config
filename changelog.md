@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Project `CLAUDE.md` holds guidance only; status, plans, and next steps live in `project_spec.md`, and `/completion-check` reads open milestones from it
 - `settings.sync.json` no longer pins a model, so Claude Code uses its default
 - `/start-feature` creates a plain branch with `git switch -c`, and `/end-feature` merges it from the primary checkout; `claude -w` covers a second concurrent session
-- Approved test plans live in git's own directory, which git never tracks and `git worktree remove` deletes with the worktree; `/end-feature` removes worktrees without `--force`, and `/completion-check` deletes the plan
+- Approved test plans live in `.claude/test-proposals/`, which a `.gitignore` containing `*` keeps untracked and `git worktree remove` deletes with the worktree; `/end-feature` removes worktrees without `--force`, and `/completion-check` deletes the plan
 - `/completion-check` runs on main when the session has `!onmain`, comparing against `origin/main`
 - Test plans are an index plus one block per test (name, category, checks, why) with closing sections for untested items, changed existing tests, and manual validation. Plans follow rules for test names, harm-based justifications, injected clocks, deterministic concurrency tests, and state-then-events-then-return assertion order
 - `test-expert` writes plans in the new format and does not justify tests by the decision they defend

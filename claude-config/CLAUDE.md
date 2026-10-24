@@ -178,7 +178,7 @@ Write a test plan in the format below. A person reads it, so it must be skimmabl
 **Test Scrutiny Phase 1:** Delegate to `test-scrutinizer` agent for plan review.
 - Pass it your test plan.
 - Work with the test-scrutinizer until it approves your plan.
-- When your plan is approved, save the approved proposal to `$(git rev-parse --absolute-git-dir)/test-proposals/<branch-name>.md` for Phase 2 comparison. Replace any `/` in the branch name with `-`. Git's own directory is never tracked, and a worktree's copy is deleted with the worktree.
+- When your plan is approved, save the approved proposal to `$(git rev-parse --show-toplevel)/.claude/test-proposals/<branch-name>.md` for Phase 2 comparison. Replace any `/` in the branch name with `-`. If that directory has no `.gitignore`, first write one containing `*`: git then ignores the directory and everything in it, including the `.gitignore`. A worktree's copy is deleted with the worktree.
 - Ask the user to review your plan, and make any requested modifications. Edits that only remove or loosen tests do not need another scrutiny pass. Update the saved proposal with every edit.
 
 #### Implementation (TDD)

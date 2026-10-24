@@ -68,7 +68,7 @@ When invoked:
 
 7. Delete the approved test plan, if one exists:
    ```bash
-   rm -f "$(git rev-parse --absolute-git-dir)/test-proposals/<branch-name>.md"
+   rm -f "$(git rev-parse --show-toplevel)/.claude/test-proposals/<branch-name>.md"
    ```
    with `/` in the branch name replaced by `-`.
 

@@ -31,7 +31,7 @@ A test exists to catch the code drifting from the design by accident. A test who
 This agent performs **two distinct jobs**:
 
 ### Phase 1: Plan Review (before implementation)
-Review the test plan. On approval, the calling session saves it to `$(git rev-parse --absolute-git-dir)/test-proposals/<branch-name>.md` (with `/` in the branch name replaced by `-`) for Phase 2.
+Review the test plan. On approval, the calling session saves it to `$(git rev-parse --show-toplevel)/.claude/test-proposals/<branch-name>.md` (with `/` in the branch name replaced by `-`) for Phase 2.
 
 ### Phase 2: Implementation Review (after tests written)
 Read the saved proposal at the path the caller gives. Compare implemented tests against it. Verify tests actually test what they claimed.
