@@ -2,6 +2,7 @@
 # One plugin per line, format: plugin-name@marketplace
 # Lines starting with # are ignored
 
+clangd-lsp@claude-plugins-official
 claude-md-management@claude-plugins-official
 code-simplifier@claude-plugins-official
 commit-commands@claude-plugins-official
