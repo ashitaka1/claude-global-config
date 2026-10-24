@@ -24,9 +24,9 @@ The one exception: when the user's prompt contains `!onmain`, editing and commit
 ### Branches
 
 1. NEVER COMMIT TO MAIN, unless the user has supplied `!onmain` this session.
-2. When developing solo, merge branches directly; when contributing to a repo use PRs.
-   - Fast-forward whenever possible. Create a merge commit only when history has diverged; never pass `--no-ff`, whatever the existing log looks like.
-3. **Branch naming:** Unless project specifies otherwise, use:
+2. When developing solo, merge branches into main locally; when contributing to a repo, use PRs.
+3. **Linear history.** Before a branch is ready to merge or to open a PR, fetch the latest main and rebase the branch onto it. Merge with `git merge --ff-only`. If the rebase stops on a conflict, run `git rebase --abort` and ask the user whether to resolve the conflicts in the rebase or merge with a merge commit. Never pass `--no-ff`. Push a rebased branch that was already pushed with `git push --force-with-lease`.
+4. **Branch naming:** Unless project specifies otherwise, use:
    - `<user>/feature-<feature-label>` for features
    - `<user>/fix-<fix-label>` for bug fixes
 

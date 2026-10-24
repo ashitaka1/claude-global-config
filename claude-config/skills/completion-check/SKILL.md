@@ -15,25 +15,34 @@ Verify that the current feature branch is ready to merge or to have a PR submitt
 
 Runs through the completion checklist:
 
-1. **Tests passing** — Run the project's specified test command and verify all tests pass.
+1. **Rebased** — Rebase the branch onto the latest main.
 
-2. **Documentation updated** — Invoke the documentation skills **in parallel** as appropriate:
+2. **Tests passing** — Run the project's specified test command and verify all tests pass.
+
+3. **Documentation updated** — Invoke the documentation skills **in parallel** as appropriate:
    - `/update-readme` — if user-facing changes were made
    - `/update-project-spec` — if technical/architectural changes were made
    - `/update-changelog` — if changes affect users/contributors
    - `/update-claude-md` — if workflow, commands, or gotchas changed
 
-3. **Milestone checks** — List any milestone whose check the owner hasn't confirmed.
+4. **Milestone checks** — List any milestone whose check the owner hasn't confirmed.
 
-4. **Commit** — Stage and commit any documentation changes made by the previous steps.
+5. **Commit** — Stage and commit any documentation changes made by the previous steps.
 
-5. **Delete the test plan** — Remove the approved test plan saved for Phase 2.
+6. **Delete the test plan** — Remove the approved test plan saved for Phase 2.
 
 ## Implementation
 
 When invoked:
 
 1. Determine the current branch and project root. Verify we are NOT on main, unless the user supplied `!onmain` this session.
+
+   Off main, rebase the branch onto the latest main so it merges by fast-forward:
+   ```bash
+   git fetch origin
+   git rebase --autostash origin/main
+   ```
+   Without an `origin` remote, rebase onto local `main`. If the rebase stops on a conflict, run `git rebase --abort`, stop, and ask the user whether to resolve the conflicts in the rebase or merge with a merge commit. If the branch has an upstream, report that its next push needs `--force-with-lease`.
 
 2. Run the project's test command (check project CLAUDE.md for the test command). If tests fail, stop and report.
 
