@@ -37,7 +37,13 @@ When invoked with `$ARGUMENTS`:
 
    `<user>` is the user's github username. `<label>` is `$ARGUMENTS` with any leading `fix-` removed, so `/start-feature fix-broken-parser` gives `<user>/fix-broken-parser` rather than `<user>/feature-fix-broken-parser`.
 
-2. Create the branch from the current HEAD and switch to it:
+2. If the current branch matches `worktree-*`, the session was started with `claude -w`. Rename that branch:
+
+   ```bash
+   git branch -m <branch-name>
+   ```
+
+   Otherwise, create the branch from the current HEAD and switch to it:
 
    ```bash
    git switch -c <branch-name>
@@ -57,5 +63,5 @@ Stop and report which step failed and what the refusal said. Do not route around
 ## Notes
 
 - Always check project CLAUDE.md for specific branch naming conventions first
-- A second session working in the same repo at the same time starts with `claude -w <name>`, which gives it its own worktree
+- A second session working in the same repo at the same time starts with `claude -w <name>`, which gives it its own worktree on a `worktree-<name>` branch; step 2 renames that branch so the worktree holds one branch for `/end-feature` to delete
 - The feature-dev workflow will handle planning, architecture, implementation, and testing
