@@ -1,166 +1,59 @@
-# Claude Code Defaults
+# claude-global-config (retired)
 
-Global configuration and reusable components for Claude Code development workflow.
+This repo no longer manages Claude Code's configuration. Don't run `./sync.sh` from it: `~/.claude/CLAUDE.md` and `settings.json` are now symlinks, and a deploy would overwrite their targets.
 
-## What's Included
+| What | Where now |
+|------|-----------|
+| Global `CLAUDE.md`, `settings.json`, status line | [`ashitaka1/machine-setup`](https://github.com/ashitaka1/machine-setup), `claude/`, symlinked into `~/.claude` by `link.sh` |
+| Skills and agents | plugins in the `avery-plugins` marketplace, [`ashitaka1/claude-skills`](https://github.com/ashitaka1/claude-skills): `dev-workflow` (testing-fundamentals, test-scrutinizer, `/next`, `/issue`, `update-docs`) and `dev-tools` (transcribe, xcodebuildmcp-cli, ssh-mcp) |
+| Feature workflow | the `superpowers` plugin, configured by the global `CLAUDE.md` |
+| Personal `viam-claude` skills | `claude-skills/archive/viam-claude` |
+| `script-writer` | `demo-techm/.claude/skills` |
+| Merging with Viam's shared config | milestone "Viam shared config" in `machine-setup` and `claude-skills` |
 
-### Global Configuration (`claude-config/`)
+## Moving a machine to the new setup
 
-- **CLAUDE.md** - Global development standards, workflow, and testing philosophy (deployed to `~/.claude/CLAUDE.md`)
-- **settings.sync.json** - Pre-approved permissions for safe commands, includes hook to prevent accidental edits on main
-- **scripts/** - Shell utilities (deployed to `~/.claude/scripts/`)
-  - `no-edit-main.py` - Hook blocking edits on the main branch. Type `!onmain` in a prompt to allow editing and committing on main for the rest of that session
-  - `statusline.sh` - Status line with model, git status, sync state, context bar
-  - `terminal-color.sh` - Per-session TTY-based color theming
+On a machine where this repo's `sync.sh` deployed the old config:
 
-### Agents (`claude-config/agents/`)
+```sh
+# 1. Get the new config and link it in. Existing CLAUDE.md, settings.json,
+#    and status line scripts are kept as *.bak.<timestamp>.
+cd ~/eng/machine-setup && git pull
+./bootstrap.sh --link-only
 
-Workflow automation agents:
+# 2. Install the plugins settings.json enables. --link-only skips this step.
+bash claude/plugins.sh
 
-- `bug-fixer` - Implement a fix, run tests, QA, and commit in its own worktree
-- `pre-work-check` - Verify branch and tests before starting work
-- `test-expert` - Plan and review unit tests
-- `test-scrutinizer` - Two-phase test plan review
+# 3. Move the old personal skills, agents, and main-branch guard aside.
+#    Plugins replace them; leaving them would duplicate /next and /issue.
+R=~/.claude/retired-$(date +%F); mkdir -p $R/skills $R/agents $R/scripts
+for s in start-feature end-feature completion-check update-changelog update-claude-md \
+         update-project-spec update-readme retro parallel-feature parallel-fix shared \
+         next issue transcribe xcodebuildmcp-cli ssh-mcp script-writer; do
+  [ -e ~/.claude/skills/$s ] && mv ~/.claude/skills/$s $R/skills/
+done
+for a in bug-fixer test-expert test-scrutinizer pre-work-check; do
+  [ -e ~/.claude/agents/$a.md ] && mv ~/.claude/agents/$a.md $R/agents/
+done
+[ -e ~/.claude/scripts/no-edit-main.py ] && mv ~/.claude/scripts/no-edit-main.py $R/scripts/
 
-### Skills (`claude-config/skills/`)
-
-- `/start-feature <name>` - Create a feature branch and launch guided development
-- `/completion-check` - Pre-merge checklist: tests, documentation, commit
-- `/end-feature [push] [merge] [main] [clean]` - Commit, merge, push, and delete the branch
-- `/parallel-fix`, `/parallel-feature` - Fan work out across isolated worktrees
-- `/update-readme`, `/update-changelog`, `/update-project-spec`, `/update-claude-md` - Documentation updaters, each forked into its own context
-- `/next`, `/issue` - Propose ready work and create linked issues in issue-tracked projects
-- `/retro` - Review workflow and suggest improvements
-- `/transcribe`, `/ssh-mcp`, `/script-writer`, `/xcodebuildmcp-cli` - Standalone tools
-
-### Templates (`templates/`)
-
-- `CLAUDE.md` - Project-level CLAUDE.md template
-- `project_spec.md` - Project specification template
-
-### Plugins
-
-- **viam-claude** - Viam robotics platform development tools
-
-## Installation
-
-### Automated Sync (Recommended)
-
-Use the built-in sync system to manage configuration:
-
-```bash
-# Clone this repository
-git clone <repo-url>
-cd claude-global-config
-
-# Deploy to live config (installs plugins automatically)
-./sync.sh deploy
+# 4. Remove the plugins the new setup dropped.
+claude plugin uninstall feature-dev@claude-plugins-official --scope user
+claude plugin uninstall code-simplifier@claude-plugins-official --scope user
 ```
 
-### Manual Installation
+Restart Claude Code. `claude plugin list` shows `dev-workflow` and `dev-tools`, and `ls -l ~/.claude/CLAUDE.md` points into `machine-setup`.
 
-Alternatively, manually copy files:
-- `claude-config/CLAUDE.md` → `~/.claude/CLAUDE.md`
-- `claude-config/agents/*` → `~/.claude/agents/*`
-- `claude-config/skills/*` → `~/.claude/skills/*`
-- `claude-config/settings.sync.json` → `~/.claude/settings.json`
+A machine without `machine-setup` needs only:
 
-## Configuration Sync
-
-### Making Configuration Changes
-
-1. **Experiment in Live Config**
-   ```bash
-   # Edit files in ~/.claude/ directly
-   vim ~/.claude/CLAUDE.md
-   # OR add a new agent
-   vim ~/.claude/agents/my-new-agent.md
-   ```
-
-2. **Check Status**
-   ```bash
-   ./sync.sh status
-   ```
-
-3. **Preview Changes**
-   ```bash
-   ./sync.sh pull --dry-run
-   ./sync.sh diff CLAUDE.md
-   ```
-
-4. **Pull Changes into Repo**
-   ```bash
-   ./sync.sh pull
-   ```
-
-5. **Review and Commit**
-   ```bash
-   git diff
-   git add -A
-   git commit -m "Update configuration from live experiments"
-   git push
-   ```
-
-6. **Deploy on Other Machines**
-   ```bash
-   # On another machine
-   git pull
-   ./sync.sh deploy
-   ```
-
-See [README-SYNC.md](README-SYNC.md) for detailed sync documentation.
-
-## Usage
-
-1. Run `./sync.sh deploy` to install global config to `~/.claude/`
-2. Copy `templates/CLAUDE.md` and `templates/project_spec.md` into new projects for project-level config
-3. Use agents during development: `pre-work-check`, `test-scrutinizer`, `test-expert`, etc.
-
-### Tracking project state in GitHub issues
-
-By default a project keeps milestones, open questions, and technical debt in `project_spec.md`. To keep them in GitHub instead, add this line to the project's `CLAUDE.md`:
-
-```
-Tracking: GitHub issues (<owner>/<repo>)
+```sh
+git clone git@github.com:ashitaka1/machine-setup.git ~/eng/machine-setup
+cd ~/eng/machine-setup && ./bootstrap.sh
 ```
 
-A project spanning several repos names them all, and optionally the GitHub Project they share and the repos that Project auto-adds issues from:
+The `avery-plugins` marketplace clones over SSH, so the machine needs a GitHub SSH key.
 
-```
-Tracking: GitHub issues (<owner>/<repo>, <owner>/<repo>); project <owner>/<number>; auto-add <owner>/<repo>
-```
+## After that
 
-With the line present:
-
-- Milestones are GitHub milestones with plain-name titles. The description contains a `Check:` line, the owner's check before closing it. A milestone with work in several repos has a same-titled milestone in each.
-- Open questions, technical debt, and planned work are issues. Questions and debt use the issue types `Question` and `Tech debt` in an organization's repos and the labels `question` and `tech-debt` in a personal account's; missing ones are created on first use.
-- Dependencies are native blocked-by links between issues, across repos where needed.
-- `/update-project-spec` files milestones, questions, and debt in the repo whose code they concern.
-- `/next` proposes an open issue with no open blocker; `/issue` creates an issue with its milestone, links, and parent, and adds it to the Project.
-- `/completion-check` lists the open milestones and the issues the branch closes.
-- Commits that resolve an issue end with `Closes #N`, or `Closes <owner>/<repo>#N` for an issue in another repo.
-
-#### Setting up a multi-repo project
-
-These are done by hand in GitHub:
-
-1. Put the repos in an organization (GitHub Free suffices); only organizations have issue types and issue fields.
-2. Create one org-level Project and add the repos' existing issues to it.
-3. Add a saved view filtered `is:open -is:blocked` and grouped by milestone. Grouping is set in the web UI.
-4. Turn on the built-in workflow that moves closed items to Done.
-5. Optionally, turn on auto-add for one repo (GitHub Free allows one auto-add workflow) and name that repo after `auto-add` in the Tracking line.
-
-## Workflow
-
-See `claude-config/CLAUDE.md` for the complete development workflow, including:
-- Starting work on feature branches
-- Two-phase test scrutiny
-- Parallel documentation updates on commit
-- Pre-merge quality checks
-
-## Philosophy
-
-- **Self-documenting code over comments**
-- **Test custom logic, not libraries**
-- **Never discard uncommitted work**
-- **Separate concerns**: Global CLAUDE.md (standards) vs project CLAUDE.md (project context) vs project_spec.md (technical) vs README.md (users)
+- Global config: edit in `machine-setup/claude/`, commit, and `git pull` on other machines; the links pick it up.
+- Skills and agents: change them in `claude-skills`, bump the plugin's `version`, push, and run `claude plugin update <plugin>@avery-plugins`.
